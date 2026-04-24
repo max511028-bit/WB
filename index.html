@@ -1436,33 +1436,7 @@ function addManual(){
 }
 
 // ═══════════════════════ GOOGLE SHEETS ═══════════════════════
-async function connectGS(){
-  const url=document.getElementById('gsUrl').value.trim();
-  if(!url){showAlert('gsAlert','⚠️ Введите URL','err');return;}
-  const m=url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if(!m){showAlert('gsAlert','⚠️ Не найден ID таблицы','err');return;}
-  const id=m[1];showLoading(true);
-  try{
-    const base=`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=`;
-    const sheetMap={Выработка:{key:'vyrab',keys:V_KEYS},Штрафы:{key:'fines',keys:F_KEYS},Операции:{key:'ops',keys:O_KEYS}};
-    let loaded=0;
-    if(!periods['Google Sheets'])periods['Google Sheets']={};
-    for(const[name,cfg]of Object.entries(sheetMap)){
-      try{
-        const r=await fetch(base+encodeURIComponent(name));
-        if(!r.ok)continue;
-        const csv=await r.text();
-        const rows=parseCSV(csv,cfg.keys,'Google Sheets');
-        if(rows.length){periods['Google Sheets'][cfg.key]=rows;loaded++;}
-      }catch(e){}
-    }
-    if(!loaded)throw new Error('Листы не найдены. Проверьте названия и доступ.');
-    localStorage.setItem('wb_gs_url',url);
-    renderPeriodSelect();renderPeriodsList();refreshAll();
-    showAlert('gsAlert',`✅ Загружено из Google Sheets`,'ok');
-  }catch(e){showAlert('gsAlert','❌ '+e.message,'err');}
-  showLoading(false);
-}
+function connectGS(){reloadFromGitHub();}
 
 function parseCSV(csv,keys,name){
   const lines=csv.split('\n').filter(l=>l.trim());
@@ -1496,10 +1470,8 @@ const cfg=getRepoConfig();
 // CSV parser — handles semicolon separator, comma decimals, BOM, CRLF
 function parseCSV(text, keyMap, periodName){
   // Remove BOM
-  text=text.replace(/^﻿/,'');
-  const lines=text.split(/
-?
-/).filter(l=>l.trim());
+  text=text.replace(/^\uFEFF/,'');
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
   if(!lines.length)return[];
   // Detect separator
   const sep=lines[0].includes(';')?';':',';
@@ -1534,11 +1506,6 @@ function splitCSVLine(line,sep){
   return res;
 }
 
-const V_KEYS=['id','fio','hire','wh','lastPeak','firstWH','days','hours','avgShift','peaks',
-  'tarif','fineTarif','retPenalty','finePenalty','retWriteoff','writeoff',
-  'totalEarn','totalDed','earnAfterDed','netEarn','office','hourly'];
-const F_KEYS=['date','id','fio','city','reason','wh','amount','type','ret'];
-const O_KEYS=['date','id','fio','officeId','wh','opType','peaks','earn','hours'];
 
 // File name mapping (supports both Russian and Latin names)
 const FILE_MAP={
