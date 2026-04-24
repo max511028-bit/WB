@@ -574,18 +574,103 @@
   .gs-url-hint { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.6; }
   .gs-url-hint code { color: var(--accent); background: rgba(108,143,255,0.1); padding: 2px 5px; border-radius: 4px; font-size: 11px; }
 
+  /* ── BOTTOM NAV (mobile) ── */
+  .bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    gap: 0;
+  }
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 4px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: color 0.15s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .bottom-nav-item .bn-icon { font-size: 20px; line-height: 1; }
+  .bottom-nav-item.active { color: var(--accent); }
+  .bottom-nav-item.active .bn-icon { filter: drop-shadow(0 0 6px rgba(108,143,255,0.6)); }
+
   @media (max-width: 1100px) {
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
   }
-  @media (max-width: 800px) {
-    .sidebar { width: 60px; }
-    .logo-title, .logo-sub, .nav-item span { display: none; }
-    .main { margin-left: 60px; }
-    .content { padding: 20px 16px; }
-    .topbar { padding: 12px 16px; }
-    .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .modal-grid { grid-template-columns: 1fr 1fr; }
-    .fines-summary { grid-template-columns: 1fr 1fr; }
+
+  @media (max-width: 768px) {
+    /* Hide sidebar, show bottom nav */
+    .sidebar { display: none; }
+    .bottom-nav { display: flex; }
+    .main { margin-left: 0; padding-bottom: 70px; }
+
+    /* Topbar */
+    .topbar { padding: 12px 16px; gap: 8px; flex-wrap: wrap; }
+    .page-title { font-size: 14px; flex: 1; }
+    .topbar-right { width: 100%; gap: 8px; }
+    .period-select { flex: 1; font-size: 12px; padding: 7px 10px; }
+    #searchInput { width: 100%; font-size: 12px; }
+    .search-wrap { flex: 1.5; }
+
+    /* Content */
+    .content { padding: 16px 12px; }
+
+    /* Stats grid — 2 col on mobile */
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .stat-card { padding: 14px; border-radius: 12px; }
+    .stat-value { font-size: 17px; }
+    .stat-label { font-size: 10px; margin-bottom: 8px; }
+
+    /* Fines summary */
+    .fines-summary { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+
+    /* Tables — horizontal scroll with sticky first col */
+    .table-card { border-radius: 12px; }
+    .table-header { padding: 12px 14px; }
+    .table-header h3 { font-size: 12px; }
+    th { padding: 10px 12px; font-size: 10px; }
+    td { padding: 11px 12px; font-size: 12px; }
+    .td-name { font-size: 12px; }
+    .td-money { font-size: 12px; }
+
+    /* Modal */
+    .modal { border-radius: 20px 20px 0 0; max-height: 92vh; margin-top: auto; }
+    .modal-overlay { align-items: flex-end; padding: 0; }
+    .modal-head { padding: 20px 20px 16px; }
+    .modal-name { font-size: 14px; }
+    .modal-body { padding: 16px 20px 24px; }
+    .modal-grid { grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+    .modal-stat { padding: 10px 12px; border-radius: 10px; }
+    .modal-stat-value { font-size: 14px; }
+    .modal-stat-label { font-size: 10px; }
+    .detail-row { font-size: 12.5px; padding: 8px 0; }
+
+    /* Admin */
+    .admin-card { padding: 16px; border-radius: 12px; }
+    .form-row { grid-template-columns: 1fr; }
+    .btn { font-size: 13px; padding: 9px 14px; }
+
+    /* Tabs */
+    .tabs { gap: 6px; }
+    .tab { font-size: 12px; padding: 7px 12px; }
+  }
+
+  @media (max-width: 380px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat-value { font-size: 15px; }
+    .modal-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .fines-summary { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -628,6 +713,30 @@
     </div>
   </div>
 </aside>
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav" id="bottomNav">
+  <div class="bottom-nav-item active" data-screen="overview" onclick="switchScreen('overview', this)">
+    <span class="bn-icon">📊</span>
+    <span>Обзор</span>
+  </div>
+  <div class="bottom-nav-item" data-screen="employees" onclick="switchScreen('employees', this)">
+    <span class="bn-icon">👥</span>
+    <span>Сотрудники</span>
+  </div>
+  <div class="bottom-nav-item" data-screen="fines" onclick="switchScreen('fines', this)">
+    <span class="bn-icon">⚠️</span>
+    <span>Штрафы</span>
+  </div>
+  <div class="bottom-nav-item" data-screen="performance" onclick="switchScreen('performance', this)">
+    <span class="bn-icon">⚡</span>
+    <span>Произв.</span>
+  </div>
+  <div class="bottom-nav-item" data-screen="admin" onclick="switchScreen('admin', this)">
+    <span class="bn-icon">⚙️</span>
+    <span>Админка</span>
+  </div>
+</nav>
 
 <!-- MAIN -->
 <main class="main">
@@ -864,7 +973,7 @@
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
           <button class="btn btn-primary" onclick="connectGoogleSheets()">Подключить и загрузить</button>
-          <button class="btn btn-ghost" onclick="loadDemoData()">📋 Загрузить демо-данные</button>
+          <button class="btn btn-ghost" onclick="loadDemoData(true)">📋 Загрузить демо-данные</button>
         </div>
       </div>
 
@@ -1045,7 +1154,7 @@ function parseTSV(tsv, periodName) {
 }
 
 // ─── DEMO DATA (from the uploaded file) ───
-function loadDemoData() {
+function loadDemoData(showMsg) {
   const demo = [
     {id:'5632830',fio:'Никушин Владимир Андреевич',hire:'09.02.2026',warehouse:'Екатеринбург',lastPeakDate:'17.03.2026',days:9,hours:109.02,avgShift:7.27,peaks:49523,tarif:104224,fineTarif:0,returnPenalty:0,finePenalty:15099,returnWrite:1498,writeOff:1909,totalEarn:105722,totalEarn30:74005,deductions:17008,salary:56997,bonus10:5699,earnAfter:62696,netEarn:88714},
     {id:'4910874',fio:'Рахмонов Хабибулло Абдумедасирович',hire:'26.08.2025',warehouse:'Екатеринбург',lastPeakDate:'17.03.2026',days:12,hours:133.86,avgShift:8.68,peaks:76246,tarif:105840,fineTarif:450,returnPenalty:91,finePenalty:19672,returnWrite:1412,writeOff:3596,totalEarn:107343,totalEarn30:75140,deductions:23718,salary:51422,bonus10:5142,earnAfter:56564,netEarn:83625},
@@ -1073,7 +1182,7 @@ function loadDemoData() {
   renderPeriodSelect();
   renderPeriodsList();
   refreshAll();
-  showAlert('addAlert', '✅ Демо-данные загружены (20 сотрудников)', 'success');
+  if (showMsg) showAlert('addAlert', '✅ Демо-данные загружены (20 сотрудников)', 'success');
 }
 
 // ─── GOOGLE SHEETS ───
@@ -1404,9 +1513,10 @@ function switchFinesTab(tab, el) {
 const TITLES = { overview:'Обзор', employees:'Сотрудники', fines:'Штрафы и вычеты', performance:'Производительность', admin:'Администрирование' };
 function switchScreen(id, el) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.nav-item, .bottom-nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('screen-'+id).classList.add('active');
-  el.classList.add('active');
+  // activate both sidebar and bottom nav items
+  document.querySelectorAll('[data-screen="'+id+'"]').forEach(n=>n.classList.add('active'));
   document.getElementById('pageTitle').textContent = TITLES[id] || id;
 }
 
@@ -1441,11 +1551,10 @@ function showLoading(v) {
 
 // ─── INIT ───
 window.addEventListener('DOMContentLoaded', () => {
-  // Restore GS url if saved
   const savedUrl = localStorage.getItem('wb_gs_url');
   if (savedUrl) document.getElementById('gsUrl').value = savedUrl;
-  // Render empty state
-  refreshAll();
+  // Авто-загрузка демо-данных (тихо)
+  loadDemoData(false);
 });
 </script>
 </body>
