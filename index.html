@@ -165,6 +165,31 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
 .bn-icon{font-size:19px;line-height:1}
 .bottom-nav-item.active{color:var(--accent)}
 
+
+/* SCORE BADGE */
+.score-badge{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;flex-shrink:0}
+.score-a{background:rgba(52,211,153,.2);color:#34d399;border:2px solid rgba(52,211,153,.4)}
+.score-b{background:rgba(108,143,255,.2);color:#6c8fff;border:2px solid rgba(108,143,255,.4)}
+.score-c{background:rgba(251,191,36,.2);color:#fbbf24;border:2px solid rgba(251,191,36,.4)}
+.score-d{background:rgba(251,146,60,.2);color:#fb923c;border:2px solid rgba(251,146,60,.4)}
+.score-f{background:rgba(248,113,113,.2);color:#f87171;border:2px solid rgba(248,113,113,.4)}
+/* FINE SHARE BAR */
+.fshare-bar{height:5px;border-radius:3px;margin-top:4px}
+/* RISK CARD */
+.risk-card{background:var(--surface);border:1px solid rgba(248,113,113,.3);border-radius:14px;padding:16px;box-shadow:0 0 0 1px rgba(248,113,113,.1),var(--glow);margin-bottom:12px;cursor:pointer;transition:border-color .2s}
+.risk-card:hover{border-color:rgba(248,113,113,.6)}
+.risk-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600;margin-right:4px;margin-top:4px}
+.rt-fines{background:rgba(248,113,113,.15);color:#f87171}
+.rt-low-rph{background:rgba(251,146,60,.15);color:#fb923c}
+.rt-hourly{background:rgba(56,189,248,.15);color:#38bdf8}
+.rt-noshow{background:rgba(107,116,148,.2);color:#9ca3af}
+.risk-filter-btn{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .15s}
+.risk-filter-btn.active{background:rgba(248,113,113,.15);color:var(--red);border-color:rgba(248,113,113,.3)}
+.risk-filter-btn:hover:not(.active){color:var(--text)}
+/* FINE CATEGORY */
+.fcat-work{background:rgba(248,113,113,.15);color:#f87171;border:1px solid rgba(248,113,113,.3)}
+.fcat-home{background:rgba(107,116,148,.15);color:#9ca3af;border:1px solid rgba(107,116,148,.3)}
+
 /* RESPONSIVE */
 @media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr)}.stats-grid.cols3{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:768px){
@@ -195,8 +220,13 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
 
 <aside class="sidebar">
   <div class="logo">
-    <div class="logo-title">WB<br>АУТСОРСИНГ</div>
-    <div class="logo-sub">Дашборд сотрудников</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#6c8fff,#a78bfa);display:flex;align-items:center;justify-content:center;font-family:Unbounded,sans-serif;font-size:13px;font-weight:900;color:#fff;flex-shrink:0">ЭП</div>
+      <div>
+        <div class="logo-title" style="font-size:12px;line-height:1.3">ЭКСПРЕСС<br>ПЛЮС</div>
+      </div>
+    </div>
+    <div class="logo-sub">WB Аутсорсинг · Дашборд</div>
   </div>
   <nav class="nav">
     <div class="nav-item active" data-s="overview" onclick="go('overview')"><span class="nav-icon">📊</span><span>Обзор</span></div>
@@ -204,6 +234,7 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
     <div class="nav-item" data-s="fines" onclick="go('fines')"><span class="nav-icon">⚠️</span><span>Штрафы</span></div>
     <div class="nav-item" data-s="ops" onclick="go('ops')"><span class="nav-icon">⚡</span><span>Операции</span></div>
     <div class="nav-item" data-s="charts" onclick="go('charts')"><span class="nav-icon">📈</span><span>Графики</span></div>
+    <div class="nav-item" data-s="risk" onclick="go('risk')"><span class="nav-icon">🚨</span><span>Зона риска</span></div>
   </nav>
   <div class="sidebar-bottom">
     <div class="nav-item" data-s="admin" onclick="go('admin')"><span class="nav-icon">⚙️</span><span>Админка</span></div>
@@ -216,6 +247,7 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
   <div class="bottom-nav-item" data-s="fines" onclick="go('fines')"><span class="bn-icon">⚠️</span><span>Штрафы</span></div>
   <div class="bottom-nav-item" data-s="ops" onclick="go('ops')"><span class="bn-icon">⚡</span><span>Операции</span></div>
   <div class="bottom-nav-item" data-s="charts" onclick="go('charts')"><span class="bn-icon">📈</span><span>Графики</span></div>
+  <div class="bottom-nav-item" data-s="risk" onclick="go('risk')"><span class="bn-icon">🚨</span><span>Риск</span></div>
   <div class="bottom-nav-item" data-s="admin" onclick="go('admin')"><span class="bn-icon">⚙️</span><span>Админка</span></div>
 </nav>
 
@@ -243,16 +275,16 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-label">Сотрудников</div><div class="stat-value" id="ov-emp">—</div><div class="stat-sub">в периоде</div></div>
         <div class="stat-card"><div class="stat-label">Общий ФОТ (на руки)</div><div class="stat-value green" id="ov-fot">—</div><div class="stat-sub">70% от чистой выработки</div></div>
-        <div class="stat-card"><div class="stat-label">Штрафы (чистые)</div><div class="stat-value red" id="ov-fines">—</div><div class="stat-sub">удержано за период</div></div>
-        <div class="stat-card"><div class="stat-label">Всего пиков</div><div class="stat-value yellow" id="ov-peaks">—</div><div class="stat-sub">по всем операциям</div></div>
+        <div class="stat-card"><div class="stat-label">Медиана ₽/час</div><div class="stat-value" style="color:var(--accent)" id="ov-medrph">—</div><div class="stat-sub">по сотрудникам</div></div>
+        <div class="stat-card"><div class="stat-label">В зоне риска</div><div class="stat-value red" id="ov-risk">—</div><div class="stat-sub">доля штрафов &gt; 20%</div></div>
       </div>
       <div class="table-card">
         <div class="table-header"><h3>Топ по заработку</h3><span class="table-count" id="ov-cnt">0</span></div>
         <div class="table-scroll">
           <table id="tOv"><thead><tr>
-            <th>#</th><th onclick="srt('tOv',1)">ФИО</th><th onclick="srt('tOv',2)">ЗП на руки</th>
-            <th onclick="srt('tOv',3)">Чистая выраб.</th><th onclick="srt('tOv',4)">Штрафы</th>
-            <th onclick="srt('tOv',5)">Пиков</th><th onclick="srt('tOv',6)">Дней</th>
+            <th onclick="srt('tOv',0)">Рейтинг</th><th>#</th><th onclick="srt('tOv',2)">ФИО</th><th onclick="srt('tOv',3)">ЗП на руки</th>
+            <th onclick="srt('tOv',4)">₽/час</th><th onclick="srt('tOv',5)">Доля штрафов</th>
+            <th onclick="srt('tOv',6)">Штрафы</th><th onclick="srt('tOv',7)">Дней</th>
           </tr></thead><tbody id="bOv"></tbody></table>
         </div>
       </div>
@@ -264,10 +296,10 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
         <div class="table-header"><h3>Все сотрудники</h3><span class="table-count" id="emp-cnt">0</span></div>
         <div class="table-scroll">
           <table id="tEmp"><thead><tr>
-            <th onclick="srt('tEmp',0)">ID</th><th onclick="srt('tEmp',1)">ФИО</th>
+            <th onclick="srt('tEmp',0)">Рейтинг</th><th onclick="srt('tEmp',1)">ФИО</th>
             <th onclick="srt('tEmp',2)">Склад</th><th onclick="srt('tEmp',3)">ЗП на руки</th>
-            <th onclick="srt('tEmp',4)">Чистая выраб.</th><th onclick="srt('tEmp',5)">Вычеты</th>
-            <th onclick="srt('tEmp',6)">Пиков</th><th onclick="srt('tEmp',7)">Дней</th><th onclick="srt('tEmp',8)">Часов</th>
+            <th onclick="srt('tEmp',4)">₽/час</th><th onclick="srt('tEmp',5)">Доля штрафов</th>
+            <th onclick="srt('tEmp',6)">Штрафы</th><th onclick="srt('tEmp',7)">Пиков</th><th onclick="srt('tEmp',8)">Дней</th><th onclick="srt('tEmp',9)">Тип</th>
           </tr></thead><tbody id="bEmp"></tbody></table>
         </div>
       </div>
@@ -293,10 +325,10 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
         <div class="table-card">
           <div class="table-header"><h3>Штрафы по сотрудникам</h3><span class="table-count" id="fn-emp-cnt">0</span></div>
           <div class="table-scroll"><table id="tFnS"><thead><tr>
-            <th onclick="srt('tFnS',0)">ФИО</th><th onclick="srt('tFnS',1)">Penalty</th>
-            <th onclick="srt('tFnS',2)">Тарификатор</th><th onclick="srt('tFnS',3)">Списания</th>
-            <th onclick="srt('tFnS',4)">Возвращено</th><th onclick="srt('tFnS',5)">Кол-во</th>
-            <th onclick="srt('tFnS',6)">ИТОГО удержано</th>
+            <th onclick="srt('tFnS',0)">ФИО</th><th onclick="srt('tFnS',1)" title="Штрафы по тарификатору + penalty">Производств.</th>
+            <th onclick="srt('tFnS',2)" title="Буфет, личные покупки">Бытовые</th><th onclick="srt('tFnS',3)">Списания</th>
+            <th onclick="srt('tFnS',4)">Возвращено</th><th onclick="srt('tFnS',5)">Доля от ЗП</th>
+            <th onclick="srt('tFnS',6)">Кол-во</th><th onclick="srt('tFnS',7)">ИТОГО удержано</th>
           </tr></thead><tbody id="bFnS"></tbody></table></div>
         </div>
       </div>
@@ -305,7 +337,7 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
           <div class="table-header"><h3>Топ причин штрафов</h3><span class="table-count" id="fn-r-cnt">0</span></div>
           <div class="table-scroll"><table id="tFnR"><thead><tr>
             <th onclick="srt('tFnR',0)">Причина</th><th onclick="srt('tFnR',1)">Тип</th>
-            <th onclick="srt('tFnR',2)">Кол-во</th><th onclick="srt('tFnR',3)">Сумма</th><th onclick="srt('tFnR',4)">Возвращено</th>
+            <th onclick="srt('tFnR',2)">Характер</th><th onclick="srt('tFnR',3)">Кол-во</th><th onclick="srt('tFnR',4)">Сумма</th><th onclick="srt('tFnR',5)">Возвращено</th>
           </tr></thead><tbody id="bFnR"></tbody></table></div>
         </div>
       </div>
@@ -336,12 +368,19 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
         <div class="tab" onclick="oTab('det',this)">По дням</div>
       </div>
       <div id="oE">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+          <select class="period-select" id="opTypeFilter" onchange="renderOps()" style="min-width:160px">
+            <option value="all">Все типы работ</option>
+          </select>
+          <span style="font-size:12px;color:var(--muted)" id="op-filter-hint"></span>
+        </div>
         <div class="table-card">
           <div class="table-header"><h3>Операции по сотрудникам</h3><span class="table-count" id="op-emp-cnt">0</span></div>
           <div class="table-scroll"><table id="tOE"><thead><tr>
             <th onclick="srt('tOE',0)">ФИО</th><th onclick="srt('tOE',1)">Пиков</th>
             <th onclick="srt('tOE',2)">Часов</th><th onclick="srt('tOE',3)">Пиков/час</th>
-            <th onclick="srt('tOE',4)">Основной тип</th><th onclick="srt('tOE',5)">Выработка</th>
+            <th onclick="srt('tOE',4)">₽/час (на руки)</th>
+            <th onclick="srt('tOE',5)">Типы работ</th><th onclick="srt('tOE',6)">Выработка</th>
           </tr></thead><tbody id="bOE"></tbody></table></div>
         </div>
       </div>
@@ -351,7 +390,8 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
           <div class="table-scroll"><table id="tOT"><thead><tr>
             <th onclick="srt('tOT',0)">Тип работ</th><th onclick="srt('tOT',1)">Сотрудников</th>
             <th onclick="srt('tOT',2)">Записей</th><th onclick="srt('tOT',3)">Пиков</th>
-            <th onclick="srt('tOT',4)">Часов</th><th onclick="srt('tOT',5)">Пиков/час</th><th onclick="srt('tOT',6)">Выработка</th>
+            <th onclick="srt('tOT',4)">Часов</th><th onclick="srt('tOT',5)">Пиков/час</th>
+            <th onclick="srt('tOT',6)">₽/час (на руки)</th><th onclick="srt('tOT',7)">Выработка</th>
           </tr></thead><tbody id="bOT"></tbody></table></div>
         </div>
       </div>
@@ -362,6 +402,7 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
             <th onclick="srt('tOD',0)">Дата</th><th onclick="srt('tOD',1)">ФИО</th>
             <th onclick="srt('tOD',2)">Тип работ</th><th onclick="srt('tOD',3)">Пиков</th>
             <th onclick="srt('tOD',4)">Часов</th><th onclick="srt('tOD',5)">Выработка</th>
+            <th onclick="srt('tOD',6)">₽/час</th>
           </tr></thead><tbody id="bOD"></tbody></table></div>
         </div>
       </div>
@@ -438,6 +479,30 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
       </div>
     </div>
 
+    <!-- RISK ZONE -->
+    <div class="screen" id="screen-risk">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">В зоне риска</div><div class="stat-value red" id="risk-cnt">—</div><div class="stat-sub">требуют внимания</div></div>
+        <div class="stat-card"><div class="stat-label">Высокая доля штрафов</div><div class="stat-value red" id="risk-hifine">—</div><div class="stat-sub">> 20% от ЗП</div></div>
+        <div class="stat-card"><div class="stat-label">Низкий ₽/час</div><div class="stat-value yellow" id="risk-lowrph">—</div><div class="stat-sub">ниже медианы</div></div>
+        <div class="stat-card"><div class="stat-label">Только почасовые</div><div class="stat-value blue" id="risk-hourly">—</div><div class="stat-sub">нет сдельной</div></div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <div style="font-size:13px;color:var(--muted)">Порог доли штрафов:</div>
+        <input type="range" id="riskThreshold" min="5" max="50" value="20" step="5" oninput="renderRisk()" style="accent-color:var(--accent);width:120px">
+        <span id="riskThresholdVal" style="font-family:Unbounded;font-size:13px;font-weight:700;color:var(--accent)">20%</span>
+        <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap" id="riskFilters">
+          <button class="risk-filter-btn active" data-rf="all" onclick="setRiskFilter('all',this)">Все</button>
+          <button class="risk-filter-btn" data-rf="fines" onclick="setRiskFilter('fines',this)">Высокие штрафы</button>
+          <button class="risk-filter-btn" data-rf="lowrph" onclick="setRiskFilter('lowrph',this)">Низкий ₽/час</button>
+          <button class="risk-filter-btn" data-rf="hourly" onclick="setRiskFilter('hourly',this)">Почасовые</button>
+        </div>
+      </div>
+
+      <div id="riskCards"></div>
+    </div>
+
     <!-- ADMIN -->
     <div class="screen" id="screen-admin">
       <div class="admin-card">
@@ -493,13 +558,30 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
   <div class="modal">
     <div class="modal-head">
       <div><div class="modal-name" id="mName">—</div><div class="modal-sub" id="mSub">—</div></div>
-      <div class="modal-close" onclick="document.getElementById('empModal').classList.remove('open')">✕</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="exportEmpXlsx()" style="display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .15s" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">
+          📥 Excel
+        </button>
+        <div class="modal-close" onclick="document.getElementById('empModal').classList.remove('open')">✕</div>
+      </div>
     </div>
     <div class="modal-body">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;padding:14px;background:var(--surface2);border-radius:12px;border:1px solid var(--border)">
+        <div class="score-badge" id="mm-score-badge" style="width:48px;height:48px;font-size:17px">—</div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Рейтинг эффективности</div>
+          <div style="font-family:Unbounded;font-size:15px;font-weight:700;margin-top:3px" id="mm-score-label">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px" id="mm-score-reasons"></div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div style="font-size:10px;color:var(--muted);margin-bottom:2px">Доля штрафов</div>
+          <div style="font-family:Unbounded;font-size:16px;font-weight:700" id="mm-fshare">—</div>
+        </div>
+      </div>
       <div class="mgrid">
         <div class="mstat"><div class="mstat-label">ЗП на руки</div><div class="mstat-value" id="mm-sal" style="color:var(--green)">—</div></div>
         <div class="mstat"><div class="mstat-label">Штрафы (чистые)</div><div class="mstat-value" id="mm-fin" style="color:var(--red)">—</div></div>
-        <div class="mstat"><div class="mstat-label">Пиков</div><div class="mstat-value" id="mm-pk" style="color:var(--yellow)">—</div></div>
+        <div class="mstat"><div class="mstat-label">₽/час (на руки)</div><div class="mstat-value" id="mm-pk" style="color:var(--accent)">—</div></div>
       </div>
       <div class="dsec">
         <h4>💰 Расчёт заработка</h4>
@@ -521,10 +603,16 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
         <div id="mm-olist"></div>
       </div>
       <div class="dsec">
-        <h4>📋 Сводка</h4>
+        <h4>📋 Производительность</h4>
         <div class="drow"><span class="drow-lbl">Рабочих дней</span><span class="drow-val" id="mm-days">—</span></div>
         <div class="drow"><span class="drow-lbl">Отработано часов</span><span class="drow-val" id="mm-hrs">—</span></div>
         <div class="drow"><span class="drow-lbl">Ср. смена</span><span class="drow-val" id="mm-sh">—</span></div>
+        <div class="drow"><span class="drow-lbl">Всего пиков</span><span class="drow-val" id="mm-pk2">—</span></div>
+        <div class="drow"><span class="drow-lbl">Пиков / час</span><span class="drow-val" id="mm-pph">—</span></div>
+        <div class="drow" style="background:rgba(108,143,255,.05);border-radius:8px;padding:10px 8px;margin-top:4px;border-bottom:none">
+          <span class="drow-lbl" style="font-weight:600;color:var(--text)">₽ / час (на руки)</span>
+          <span class="drow-val" id="mm-rph" style="font-family:Unbounded,sans-serif;font-size:15px;color:var(--accent)">—</span>
+        </div>
         <div class="drow"><span class="drow-lbl">Склад</span><span class="drow-val" id="mm-wh">—</span></div>
         <div class="drow"><span class="drow-lbl">Дата найма</span><span class="drow-val" id="mm-hire">—</span></div>
       </div>
@@ -591,38 +679,145 @@ function renderOverview(){
   const fot=v.reduce((s,r)=>s+Math.max(0,pn(r.netEarn))*RATE,0);
   const nf=f.reduce((s,r)=>s+pn(r.amount)-pn(r.ret),0);
   const pk=o.reduce((s,r)=>s+pn(r.peaks),0);
-  set('ov-emp',v.length); set('ov-fot',fmt(fot)); set('ov-fines',fmt(nf)); set('ov-peaks',fmtN(pk,0));
+  // Median ₽/hour and risk count
+  const rphArr=v.map(r=>{
+    const sal=Math.max(0,pn(r.netEarn))*RATE;
+    const hrs=o.filter(x=>x.id==r.id).reduce((s,x)=>s+pn(x.hours),0)||pn(r.hours);
+    return hrs>0?sal/hrs:0;
+  }).filter(x=>x>0).sort((a,b)=>a-b);
+  const medRph=rphArr.length?rphArr[Math.floor(rphArr.length/2)]:0;
+  const riskCount=v.filter(r=>{
+    const sal=Math.max(0,pn(r.netEarn))*RATE;
+    const rf=f.filter(x=>x.id==r.id).reduce((s,x)=>s+pn(x.amount)-pn(x.ret),0);
+    return sal>0 && rf/sal>=0.20;
+  }).length;
+  set('ov-emp',v.length); set('ov-fot',fmt(fot)); set('ov-medrph',fmt(medRph)); set('ov-risk',riskCount);
   const sorted=[...v].sort((a,b)=>pn(b.netEarn)-pn(a.netEarn)).slice(0,25);
   set('ov-cnt',sorted.length+' чел.');
   set('bOv',sorted.map((r,i)=>{
     const sal=Math.max(0,pn(r.netEarn))*RATE;
     const rf=f.filter(x=>x.id==r.id).reduce((s,x)=>s+pn(x.amount)-pn(x.ret),0);
-    const rp=o.filter(x=>x.id==r.id).reduce((s,x)=>s+pn(x.peaks),0)||pn(r.peaks);
+    const oEmp=o.filter(x=>x.id==r.id);
+    const hrs=oEmp.reduce((s,x)=>s+pn(x.hours),0)||pn(r.hours);
+    const rph=hrs>0?sal/hrs:0;
+    const pph=hrs>0?(oEmp.reduce((s,x)=>s+pn(x.peaks),0)||pn(r.peaks))/hrs:0;
+    const fineShare=sal>0?rf/sal:0;
+    const isHourly=r.hourly==='Да';
+    const sc=calcScore(rph,fineShare,pph,pn(r.days),isHourly);
+    const fsClr=fineShare>0.3?'var(--red)':fineShare>0.15?'var(--yellow)':'var(--green)';
     return`<tr onclick="openEmp('${r.id}','${r._period}')">
+      <td><div class="score-badge ${sc.cls}" style="width:30px;height:30px;font-size:11px">${sc.grade}</div></td>
       <td style="color:var(--muted);font-family:Unbounded;font-size:11px">${i+1}</td>
       <td class="td-name">${r.fio||'—'}<br><span class="td-id">${r.id}</span></td>
-      <td class="td-mono g">${fmt(sal)}</td><td>${fmt(pn(r.netEarn))}</td>
-      <td class="td-mono ${rf>0?'r':''}">${rf>0?fmt(rf):'—'}</td>
-      <td>${fmtN(rp,0)}</td><td>${r.days||0}</td>
+      <td class="td-mono g">${fmt(sal)}</td>
+      <td class="td-mono" style="color:var(--accent)">${rph>0?fmt(rph):'—'}</td>
+      <td style="font-weight:700;color:${fsClr}">${rf>0?(fineShare*100).toFixed(1)+'%':'—'}</td>
+      <td class="td-mono r">${rf>0?fmt(rf):'—'}</td>
+      <td style="color:var(--muted)">${r.days||0}</td>
     </tr>`;
-  }).join('')||emptyRow(7));
+  }).join('')||emptyRow(8));
+}
+
+// ── SCORING ENGINE ──
+// Inputs per employee: rph (₽/hour net), fineShare (fine/salary), pph (peaks/hour), days
+// Returns {score:0-100, grade:'A'-'F', cls, label, reasons[]}
+function calcScore(rph, fineShare, pph, days, isHourly){
+  if(days===0) return {score:0,grade:'—',cls:'',label:'Нет данных',reasons:['Не выходил в период']};
+  let s=100;
+  const reasons=[];
+
+  // ₽/hour (weight 40): benchmark 300 net/h = 100pts
+  const rphScore=isHourly? 50 : Math.min(100, rph/3); // hourly gets neutral score
+  s = s*0.6 + rphScore*0.4;
+
+  // Fine share (weight 35): 0%=100pts, 20%=50pts, 40%+=0pts
+  const fineScore=Math.max(0, 100 - fineShare*250);
+  if(fineShare>0.20){reasons.push(`Штрафы ${(fineShare*100).toFixed(0)}% от ЗП`);}
+  s = s*0.65 + fineScore*0.35;
+
+  // Peaks/hour (weight 25): 0 for hourly, else benchmark 500=100pts
+  if(!isHourly){
+    const pphScore=Math.min(100, pph/5);
+    if(pph<200&&days>=3)reasons.push(`Низкая производительность: ${pph.toFixed(0)} пик/ч`);
+    s = s*0.75 + pphScore*0.25;
+  }
+
+  const score=Math.round(Math.max(0,Math.min(100,s)));
+  let grade,cls,label;
+  if(score>=80){grade='A';cls='score-a';label='Отлично';}
+  else if(score>=65){grade='B';cls='score-b';label='Хорошо';}
+  else if(score>=50){grade='C';cls='score-c';label='Средне';}
+  else if(score>=35){grade='D';cls='score-d';label='Слабо';}
+  else{grade='F';cls='score-f';label='Проблема';}
+  return{score,grade,cls,label,reasons};
+}
+
+// Fine category classifier
+function classifyFine(reason){
+  const r=(reason||'').toLowerCase();
+  if(r.includes('буфет')||r.includes('вода')||r.includes('кофе')||r.includes('чай')||
+     r.includes('лимонад')||r.includes('сок ')||r.includes('напит')||r.includes('булочк')||
+     r.includes('пончик')||r.includes('хлеб')||r.includes('лепёшк')||r.includes('сметан')||
+     r.includes('сахар')||r.includes('стакан')||r.includes('мохито')||r.includes('энергет')||
+     r.includes('шоколад')||r.includes('батончик')||r.includes('лапша')||r.includes('рис')||
+     r.includes('горчица')||r.includes('бедро')||r.includes('курин')){
+    return 'home'; // бытовые
+  }
+  return 'work'; // производственные
 }
 
 function renderEmployees(){
   const v=getV();
+  const fAll=getF();
+  const oAll=getO();
+
+  // build fine & ops maps
+  const fMap={};
+  fAll.forEach(r=>{
+    if(!fMap[r.id])fMap[r.id]={tot:0,prod:0,home:0,ret:0};
+    const net=pn(r.amount)-pn(r.ret);
+    fMap[r.id].tot+=net;
+    if(classifyFine(r.reason)==='work') fMap[r.id].prod+=net;
+    else fMap[r.id].home+=net;
+    fMap[r.id].ret+=pn(r.ret);
+  });
+  const oMap={};
+  oAll.forEach(r=>{
+    if(!oMap[r.id])oMap[r.id]={hr:0,pk:0,er:0};
+    oMap[r.id].hr+=pn(r.hours);
+    oMap[r.id].pk+=pn(r.peaks);
+    oMap[r.id].er+=pn(r.earn);
+  });
+
   set('emp-cnt',v.length+' чел.');
   set('bEmp',v.map(r=>{
     const sal=Math.max(0,pn(r.netEarn))*RATE;
+    const fm=fMap[r.id]||{tot:0,prod:0,home:0,ret:0};
+    const om=oMap[r.id]||{hr:0,pk:0,er:0};
+    const hrs=om.hr||pn(r.hours);
+    const rph=hrs>0?sal/hrs:0;
+    const pph=hrs>0?om.pk/hrs:0;
+    const fineShare=sal>0?fm.tot/sal:0;
+    const isHourly=r.hourly==='Да';
+    const sc=calcScore(rph,fineShare,pph,pn(r.days),isHourly);
+    const fsPct=(fineShare*100).toFixed(1);
+    const fsClr=fineShare>0.3?'var(--red)':fineShare>0.15?'var(--yellow)':'var(--green)';
+    const typeTag=isHourly
+      ?'<span class="badge b-blue" style="font-size:10px">Почасовой</span>'
+      :'<span class="badge b-muted" style="font-size:10px">Сдельный</span>';
     return`<tr onclick="openEmp('${r.id}','${r._period}')">
-      <td class="td-id">${r.id}</td>
-      <td class="td-name">${r.fio||'—'}</td>
-      <td><span class="badge b-yellow">${r.wh||'—'}</span></td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="score-badge ${sc.cls}">${sc.grade}</div><div style="font-size:10px;color:var(--muted)">${sc.score}</div></div></td>
+      <td class="td-name">${r.fio||'—'}<br><span class="td-id">${r.id}</span></td>
+      <td><span class="badge b-yellow" style="font-size:10px">${r.wh||'—'}</span></td>
       <td class="td-mono g">${fmt(sal)}</td>
-      <td>${fmt(pn(r.netEarn))}</td>
-      <td class="td-mono r">${pn(r.totalDed)?fmt(pn(r.totalDed)):'—'}</td>
-      <td>${fmtN(pn(r.peaks),0)}</td><td>${r.days||0}</td><td>${fmtN(pn(r.hours),1)}</td>
+      <td class="td-mono" style="color:var(--accent)">${rph>0?fmt(rph):'—'}</td>
+      <td><div style="font-size:12px;font-weight:600;color:${fsClr}">${fm.tot>0?fsPct+'%':'—'}</div>${fm.tot>0?`<div class="fshare-bar" style="width:${Math.min(100,fineShare*100).toFixed(0)}%;background:${fsClr};opacity:.6"></div>`:''}</td>
+      <td class="td-mono r" style="font-size:11px">${fm.tot>0?fmt(fm.tot):'—'}</td>
+      <td>${fmtN(om.pk||pn(r.peaks),0)}</td>
+      <td style="color:var(--muted)">${r.days||0}</td>
+      <td>${typeTag}</td>
     </tr>`;
-  }).join('')||emptyRow(9));
+  }).join('')||emptyRow(10));
 }
 
 function renderFines(){
@@ -645,23 +840,70 @@ function renderFines(){
     </div>`;
   }).join(''));
 
-  // By employee
+  // Fine category split
+  const fCatWork=f.filter(r=>classifyFine(r.reason)==='work');
+  const fCatHome=f.filter(r=>classifyFine(r.reason)==='home');
+  const totWork=fCatWork.reduce((s,r)=>s+pn(r.amount)-pn(r.ret),0);
+  const totHome=fCatHome.reduce((s,r)=>s+pn(r.amount)-pn(r.ret),0);
+
+  // Extended breakdown bar with categories
+  const catBreakTotal=(totWork+totHome)||1;
+  set('fineBreakdown', (document.getElementById('fineBreakdown')?.innerHTML||'') );
+  // Append category bar after type bars
+  const breakEl=document.getElementById('fineBreakdown');
+  if(breakEl){
+    const catHtml=`<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">По характеру штрафов</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:10px;padding:12px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">⚠️ Производственные</div>
+          <div style="font-family:Unbounded;font-size:16px;font-weight:700;color:var(--red)">${fmt(totWork)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Потери, списания, нарушения</div>
+        </div>
+        <div style="background:rgba(107,116,148,.08);border:1px solid rgba(107,116,148,.2);border-radius:10px;padding:12px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">🧃 Бытовые (буфет)</div>
+          <div style="font-family:Unbounded;font-size:16px;font-weight:700;color:var(--muted)">${fmt(totHome)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">${((totHome/catBreakTotal)*100).toFixed(0)}% всех штрафов</div>
+        </div>
+      </div>
+    </div>`;
+    breakEl.innerHTML=breakEl.innerHTML+catHtml;
+  }
+
+  // Get salary map for fine share calc
+  const salMap={};
+  getV().forEach(r=>{salMap[r.id]=Math.max(0,pn(r.netEarn))*RATE;});
+
+  // By employee — new columns: production / household / share
   const em={};
   f.forEach(r=>{
-    if(!em[r.id])em[r.id]={fio:r.fio,p:0,t:0,w:0,ret:0,cnt:0};
+    if(!em[r.id])em[r.id]={fio:r.fio,prod:0,home:0,w:0,ret:0,cnt:0};
     const e=em[r.id];e.cnt++;e.ret+=pn(r.ret);
-    if(r.type==='penalty')e.p+=pn(r.amount);
-    else if(r.type==='tarificator')e.t+=pn(r.amount);
-    else if(r.type==='writeoff')e.w+=pn(r.amount);
+    const amt=pn(r.amount);
+    if(r.type==='writeoff') e.w+=amt;
+    else if(classifyFine(r.reason)==='work') e.prod+=amt;
+    else e.home+=amt;
   });
-  const ea=Object.entries(em).map(([id,v])=>({id,...v,tot:v.p+v.t+v.w-v.ret})).sort((a,b)=>b.tot-a.tot);
+  const ea=Object.entries(em).map(([id,v])=>{
+    const tot=v.prod+v.home+v.w-v.ret;
+    const sal=salMap[id]||0;
+    const share=sal>0?tot/sal:0;
+    return{id,...v,tot,sal,share};
+  }).sort((a,b)=>b.share-a.share);
   set('fn-emp-cnt',ea.length+' чел.');
-  set('bFnS',ea.map(e=>`<tr onclick="openEmp('${e.id}','')">
-    <td class="td-name">${e.fio||e.id}</td>
-    <td class="td-mono r">${e.p?fmt(e.p):'—'}</td><td class="td-mono r">${e.t?fmt(e.t):'—'}</td>
-    <td class="td-mono y">${e.w?fmt(e.w):'—'}</td><td class="td-mono g">${e.ret?fmt(e.ret):'—'}</td>
-    <td style="color:var(--muted)">${e.cnt}</td><td class="td-mono r">${fmt(e.tot)}</td>
-  </tr>`).join('')||emptyRow(7));
+  set('bFnS',ea.map(e=>{
+    const fsClr=e.share>0.3?'var(--red)':e.share>0.15?'var(--yellow)':'var(--green)';
+    return`<tr onclick="openEmp('${e.id}','')">
+      <td class="td-name">${e.fio||e.id}</td>
+      <td><span class="badge fcat-work">${e.prod?fmt(e.prod):'—'}</span></td>
+      <td><span class="badge fcat-home">${e.home?fmt(e.home):'—'}</span></td>
+      <td class="td-mono y">${e.w?fmt(e.w):'—'}</td>
+      <td class="td-mono g">${e.ret?fmt(e.ret):'—'}</td>
+      <td style="font-weight:700;color:${fsClr}">${e.sal>0?(e.share*100).toFixed(1)+'%':'—'}</td>
+      <td style="color:var(--muted)">${e.cnt}</td>
+      <td class="td-mono r">${fmt(e.tot)}</td>
+    </tr>`;
+  }).join('')||emptyRow(8));
 
   // By reason
   const rm={};
@@ -672,11 +914,18 @@ function renderFines(){
   });
   const ra=Object.values(rm).sort((a,b)=>b.amount-a.amount);
   set('fn-r-cnt',ra.length+' причин');
-  set('bFnR',ra.map(r=>`<tr>
-    <td style="max-width:280px;white-space:normal;font-size:12px">${r.reason}</td>
-    <td>${ftBadge(r.type)}</td><td style="color:var(--muted)">${r.cnt}</td>
-    <td class="td-mono r">${fmt(r.amount)}</td><td class="td-mono g">${r.ret?fmt(r.ret):'—'}</td>
-  </tr>`).join('')||emptyRow(5));
+  set('bFnR',ra.map(r=>{
+    const cat=classifyFine(r.reason);
+    const catBadge=cat==='home'?'<span class="badge fcat-home">Буфет</span>':'<span class="badge fcat-work">Произв.</span>';
+    return`<tr>
+      <td style="max-width:240px;white-space:normal;font-size:12px">${r.reason}</td>
+      <td>${ftBadge(r.type)}</td>
+      <td>${catBadge}</td>
+      <td style="color:var(--muted)">${r.cnt}</td>
+      <td class="td-mono r">${fmt(r.amount)}</td>
+      <td class="td-mono g">${r.ret?fmt(r.ret):'—'}</td>
+    </tr>`;
+  }).join('')||emptyRow(6));
 
   // Detail
   set('fn-d-cnt',f.length+' строк');
@@ -691,16 +940,29 @@ function renderFines(){
 }
 
 function renderOps(){
-  const o=getO();
-  const pk=o.reduce((s,r)=>s+pn(r.peaks),0);
-  const hr=o.reduce((s,r)=>s+pn(r.hours),0);
-  const er=o.reduce((s,r)=>s+pn(r.earn),0);
-  const types=[...new Set(o.map(r=>r.opType).filter(Boolean))];
+  const oAll=getO();
+
+  // Fill op type filter
+  const sel=document.getElementById('opTypeFilter');
+  if(sel){
+    const cur=sel.value;
+    const allTypes=[...new Set(oAll.map(r=>r.opType).filter(Boolean))].sort();
+    sel.innerHTML='<option value="all">Все типы работ</option>';
+    allTypes.forEach(t=>{const op=document.createElement('option');op.value=t;op.textContent=t;sel.appendChild(op);});
+    if(allTypes.includes(cur))sel.value=cur;
+  }
+  const curType=document.getElementById('opTypeFilter')?.value||'all';
+
+  // Stats from all ops (not filtered by type)
+  const pk=oAll.reduce((s,r)=>s+pn(r.peaks),0);
+  const hr=oAll.reduce((s,r)=>s+pn(r.hours),0);
+  const er=oAll.reduce((s,r)=>s+pn(r.earn),0);
+  const types=[...new Set(oAll.map(r=>r.opType).filter(Boolean))];
   set('op-peaks',fmtN(pk,0)); set('op-hours',fmtN(hr,1)); set('op-types',types.length); set('op-earn',fmt(er));
 
-  // Type cards
+  // Type cards (all)
   const tm={};
-  o.forEach(r=>{
+  oAll.forEach(r=>{
     if(!r.opType)return;
     if(!tm[r.opType])tm[r.opType]={t:r.opType,pk:0,hr:0,er:0,emps:new Set(),cnt:0};
     tm[r.opType].pk+=pn(r.peaks);tm[r.opType].hr+=pn(r.hours);
@@ -711,53 +973,80 @@ function renderOps(){
     ta.map(t=>{
       const cfg=OP_CFG[t.t]||{color:'#6b7494'};
       const pph=t.hr>0?(t.pk/t.hr).toFixed(0):0;
-      return`<div class="stat-card" style="border-top:2px solid ${cfg.color}">
+      const rph=t.hr>0?(t.er/t.hr*RATE).toFixed(0):0;
+      const isActive=curType==='all'||curType===t.t;
+      return`<div class="stat-card" style="border-top:2px solid ${cfg.color};cursor:pointer;opacity:${isActive?1:0.4}" onclick="document.getElementById('opTypeFilter').value='${t.t}';renderOps()">
         <div class="stat-label">${t.t}</div>
         <div style="font-family:Unbounded;font-size:16px;font-weight:700;color:${cfg.color}">${fmtN(t.pk,0)}</div>
-        <div class="stat-sub">${t.emps.size} чел · ${fmtN(t.hr,0)} ч · ${pph} пик/ч</div>
+        <div class="stat-sub">${t.emps.size} чел · ${fmtN(t.hr,0)} ч</div>
+        <div class="stat-sub" style="color:var(--accent);margin-top:2px">${fmt(pn(rph))}/ч на руки</div>
       </div>`;
     }).join('')
   }</div>`);
 
-  // By employee
+  // Apply type filter for employee table
+  const o=curType==='all'?oAll:oAll.filter(r=>r.opType===curType);
+  if(curType!=='all'){
+    set('op-filter-hint',`Показаны сотрудники с типом: ${curType}`);
+  } else {
+    set('op-filter-hint','');
+  }
+
+  // Build vyrab map for ₽/hour calc
+  const vMap={};
+  getV().forEach(r=>{vMap[r.id]=r;});
+
+  // By employee — show ALL types as badges
   const em={};
   o.forEach(r=>{
-    if(!em[r.id])em[r.id]={id:r.id,fio:r.fio,pk:0,hr:0,er:0,types:{}};
+    if(!em[r.id])em[r.id]={id:r.id,fio:r.fio,pk:0,hr:0,er:0,types:{},typeHr:{}};
     em[r.id].pk+=pn(r.peaks);em[r.id].hr+=pn(r.hours);em[r.id].er+=pn(r.earn);
     em[r.id].types[r.opType]=(em[r.id].types[r.opType]||0)+pn(r.peaks);
+    em[r.id].typeHr[r.opType]=(em[r.id].typeHr[r.opType]||0)+pn(r.hours);
   });
   const ea=Object.values(em).sort((a,b)=>b.pk-a.pk);
   set('op-emp-cnt',ea.length+' чел.');
   set('bOE',ea.map(e=>{
-    const main=Object.entries(e.types).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
     const pph=e.hr>0?(e.pk/e.hr).toFixed(0):0;
+    // ₽/hour on hands = earn_on_ops * RATE / hours_on_ops
+    const rph=e.hr>0?(e.er*RATE/e.hr).toFixed(0):0;
+    // All types sorted by peaks, shown as badges
+    const allTypeBadges=Object.entries(e.types).sort((a,b)=>b[1]-a[1]).map(([t])=>opBadge(t)).join(' ');
     return`<tr onclick="openEmp('${e.id}','')">
       <td class="td-name">${e.fio||'—'}</td>
-      <td class="td-mono y">${fmtN(e.pk,0)}</td><td>${fmtN(e.hr,1)}</td>
+      <td class="td-mono y">${fmtN(e.pk,0)}</td>
+      <td>${fmtN(e.hr,1)}</td>
       <td><span class="badge ${pn(pph)>500?'b-green':pn(pph)>250?'b-yellow':'b-red'}">${pph}</span></td>
-      <td>${opBadge(main)}</td><td>${fmt(e.er)}</td>
-    </tr>`;
-  }).join('')||emptyRow(6));
-
-  // By type
-  set('bOT',ta.map(t=>{
-    const pph=t.hr>0?(t.pk/t.hr).toFixed(0):0;
-    return`<tr><td>${opBadge(t.t)}</td><td>${t.emps.size}</td><td style="color:var(--muted)">${t.cnt}</td>
-      <td class="td-mono y">${fmtN(t.pk,0)}</td><td>${fmtN(t.hr,1)}</td>
-      <td><span class="badge ${pn(pph)>500?'b-green':pn(pph)>250?'b-yellow':'b-red'}">${pph}</span></td>
-      <td>${fmt(t.er)}</td>
+      <td class="td-mono" style="color:var(--accent)">${fmt(pn(rph))}</td>
+      <td style="white-space:normal;min-width:140px">${allTypeBadges}</td>
+      <td>${fmt(e.er)}</td>
     </tr>`;
   }).join('')||emptyRow(7));
 
-  // Detail
-  set('op-d-cnt',o.length+' строк');
-  set('bOD',o.map(r=>`<tr>
+  // By type — add ₽/hour
+  set('bOT',ta.map(t=>{
+    const pph=t.hr>0?(t.pk/t.hr).toFixed(0):0;
+    const rph=t.hr>0?(t.er*RATE/t.hr).toFixed(0):0;
+    return`<tr><td>${opBadge(t.t)}</td><td>${t.emps.size}</td><td style="color:var(--muted)">${t.cnt}</td>
+      <td class="td-mono y">${fmtN(t.pk,0)}</td><td>${fmtN(t.hr,1)}</td>
+      <td><span class="badge ${pn(pph)>500?'b-green':pn(pph)>250?'b-yellow':'b-red'}">${pph}</span></td>
+      <td class="td-mono" style="color:var(--accent)">${fmt(pn(rph))}/ч</td>
+      <td>${fmt(t.er)}</td>
+    </tr>`;
+  }).join('')||emptyRow(8));
+
+  // Detail (apply type filter)
+  const oDet=curType==='all'?oAll:oAll.filter(r=>r.opType===curType);
+  set('op-d-cnt',oDet.length+' строк');
+  set('bOD',oDet.map(r=>`<tr>
     <td style="color:var(--muted);font-size:12px">${r.date||'—'}</td>
     <td class="td-name" style="font-size:12px">${r.fio||r.id}</td>
     <td>${opBadge(r.opType)}</td>
     <td class="td-mono y">${fmtN(pn(r.peaks),0)}</td>
-    <td>${fmtN(pn(r.hours),2)}</td><td>${fmt(pn(r.earn))}</td>
-  </tr>`).join('')||emptyRow(6));
+    <td>${fmtN(pn(r.hours),2)}</td>
+    <td>${fmt(pn(r.earn))}</td>
+    <td class="td-mono" style="color:var(--accent);font-size:11px">${pn(r.hours)>0?fmt(pn(r.earn)*RATE/pn(r.hours))+'/ч':'—'}</td>
+  </tr>`).join('')||emptyRow(7));
 }
 
 // ═══════════════════════ MODAL ═══════════════════════
@@ -789,9 +1078,22 @@ function openEmp(id, periodName){
   const nf=fA-fRet;
   const pk=pn(vRow?.peaks)||oR.reduce((s,r)=>s+pn(r.peaks),0);
 
+  // Score
+  const fineShareModal=sal>0?nf/sal:0;
+  const totalHrsModal=oR.reduce((s,r)=>s+pn(r.hours),0)||pn(vRow?.hours);
+  const rphModal=totalHrsModal>0?sal/totalHrsModal:0;
+  const pphModal=totalHrsModal>0?(oR.reduce((s,r)=>s+pn(r.peaks),0)||pn(vRow?.peaks))/totalHrsModal:0;
+  const scModal=calcScore(rphModal,fineShareModal,pphModal,pn(vRow?.days||0),vRow?.hourly==='Да');
+  const scBadge=document.getElementById('mm-score-badge');
+  if(scBadge){scBadge.className='score-badge '+scModal.cls;scBadge.textContent=scModal.grade;}
+  set('mm-score-label',`${scModal.label} · ${scModal.score}/100`);
+  set('mm-score-reasons',scModal.reasons.join(' · ')||'Без замечаний');
+  const fsClrModal=fineShareModal>0.3?'var(--red)':fineShareModal>0.15?'var(--yellow)':'var(--green)';
+  set('mm-fshare',nf>0?`<span style="color:${fsClrModal}">${(fineShareModal*100).toFixed(1)}%</span>`:'0%');
+
   set('mm-sal',fmt(sal)); set('mm-sal2',fmt(sal));
   set('mm-fin',nf>0?fmt(nf):'—');
-  set('mm-pk',fmtN(pk,0));
+  set('mm-pk',rphModal>0?fmt(rphModal):'—'); // ₽/час instead of peaks in top grid
   set('mm-tarif',fmt(pn(vRow?.tarif)));
   set('mm-ded',pn(vRow?.totalDed)?'−'+fmt(pn(vRow.totalDed)):'—');
   set('mm-net',fmt(netEarn));
@@ -821,9 +1123,18 @@ function openEmp(id, periodName){
   });
   set('mm-olist', buildModalOps(oR));
 
+  const totalHrsOps=oR.reduce((s,r)=>s+pn(r.hours),0);
+  const totalPkOps=oR.reduce((s,r)=>s+pn(r.peaks),0)||pn(vRow?.peaks);
+  const usedHrs=totalHrsOps>0?totalHrsOps:pn(vRow?.hours);
+  const rph=usedHrs>0?(sal/usedHrs):0;
+  const pphCalc=usedHrs>0?(totalPkOps/usedHrs):0;
+
   set('mm-days',vRow?.days||'—');
-  set('mm-hrs',vRow?.hours?fmtN(pn(vRow.hours),1)+' ч':'—');
+  set('mm-hrs',fmtN(usedHrs,1)+' ч');
   set('mm-sh',vRow?.avgShift?fmtN(pn(vRow.avgShift),2)+' ч':'—');
+  set('mm-pk2',fmtN(totalPkOps,0));
+  set('mm-pph',fmtN(pphCalc,0)+' пик/ч');
+  set('mm-rph',fmt(rph));
   set('mm-wh',wh);
   set('mm-hire',vRow?.hire||'—');
   document.getElementById('empModal').classList.add('open');
@@ -863,7 +1174,7 @@ function oTab(id,el){
 }
 
 // ═══════════════════════ NAV ═══════════════════════
-const TITLES={overview:'Обзор',employees:'Сотрудники',fines:'Штрафы',ops:'Операции',charts:'Графики',admin:'Администрирование'};
+const TITLES={overview:'Обзор',employees:'Сотрудники',fines:'Штрафы',ops:'Операции',charts:'Графики',risk:'Зона риска',admin:'Администрирование'};
 function go(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('[data-s]').forEach(n=>n.classList.remove('active'));
@@ -874,7 +1185,7 @@ function go(id){
 function onPeriod(){curPeriod=document.getElementById('periodSelect').value;renderCitySelect();refreshAll();}
 function onSearch(){curSearch=document.getElementById('searchInput').value;refreshAll();}
 function onCity(){curCity=document.getElementById('citySelect').value;refreshAll();}
-function refreshAll(){renderOverview();renderEmployees();renderFines();renderOps();renderCharts();}
+function refreshAll(){renderOverview();renderEmployees();renderFines();renderOps();renderCharts();renderRisk();}
 
 function renderCitySelect(){
   const sel=document.getElementById('citySelect');
@@ -1294,6 +1605,200 @@ function renderFineList(id, fR){
       <div style="flex-shrink:0;color:var(--red);font-family:Unbounded;font-size:12px;font-weight:600">${fmt(pn(r.amount))}</div>
     </div>`).join('')}`:
     '<div style="color:var(--muted);font-size:13px;padding:8px 0">Штрафов нет</div>');
+}
+
+
+// ═══════════════════════ EXCEL EXPORT ═══════════════════════
+function exportEmpXlsx(){
+  const sub=document.getElementById('mSub').textContent;
+  const idM=sub.match(/ID: (\S+)/);
+  if(!idM)return;
+  const id=idM[1];
+  const name=document.getElementById('mName').textContent;
+
+  let vRow=null;
+  let fR=[],oR=[];
+  Object.values(periods).forEach(p=>{
+    const v=p.vyrab?.find(r=>r.id==id);
+    if(v&&!vRow)vRow=v;
+    fR=fR.concat((p.fines||[]).filter(r=>r.id==id));
+    oR=oR.concat((p.ops||[]).filter(r=>r.id==id));
+  });
+
+  const sal=Math.max(0,pn(vRow?.netEarn))*RATE;
+  const totalHrs=oR.reduce((s,r)=>s+pn(r.hours),0)||pn(vRow?.hours);
+  const rph=totalHrs>0?sal/totalHrs:0;
+
+  // Build CSV content (UTF-8 with BOM for Excel)
+  const rows=[];
+  rows.push(['КАРТОЧКА СОТРУДНИКА']);
+  rows.push(['']);
+  rows.push(['ФИО',name]);
+  rows.push(['ID',id]);
+  rows.push(['Склад',vRow?.wh||'—']);
+  rows.push(['Дата найма',vRow?.hire||'—']);
+  rows.push(['']);
+  rows.push(['── ЗАРАБОТОК ──']);
+  rows.push(['Выработка по тарификатору',pn(vRow?.tarif)]);
+  rows.push(['Общие вычеты',pn(vRow?.totalDed)]);
+  rows.push(['Чистая выработка',pn(vRow?.netEarn)]);
+  rows.push(['ЗП на руки (70%)',sal.toFixed(2)]);
+  rows.push(['']);
+  rows.push(['── ПРОИЗВОДИТЕЛЬНОСТЬ ──']);
+  rows.push(['Рабочих дней',vRow?.days||0]);
+  rows.push(['Отработано часов',fmtN(totalHrs,2)]);
+  rows.push(['Пиков всего',oR.reduce((s,r)=>s+pn(r.peaks),0)||pn(vRow?.peaks)]);
+  rows.push(['₽/час на руки',rph.toFixed(2)]);
+  rows.push(['']);
+  rows.push(['── ШТРАФЫ ──']);
+  rows.push(['Дата','Причина','Тип','Сумма','Возврат','Итого']);
+  fR.sort((a,b)=>String(a.date).localeCompare(String(b.date))).forEach(r=>{
+    const typeLabel={penalty:'Penalty',tarificator:'Тарификатор',writeoff:'Списание'}[r.type]||r.type;
+    rows.push([r.date,r.reason,typeLabel,pn(r.amount),pn(r.ret),(pn(r.amount)-pn(r.ret)).toFixed(2)]);
+  });
+  const fTotal=fR.reduce((s,r)=>s+pn(r.amount)-pn(r.ret),0);
+  rows.push(['','','ИТОГО','','',fTotal.toFixed(2)]);
+  rows.push(['']);
+  rows.push(['── ОПЕРАЦИИ ──']);
+  rows.push(['Дата','Тип работ','Пиков','Часов','Выработка','₽/час на руки']);
+  oR.sort((a,b)=>String(a.date).localeCompare(String(b.date))).forEach(r=>{
+    const rphRow=pn(r.hours)>0?(pn(r.earn)*RATE/pn(r.hours)).toFixed(2):0;
+    rows.push([r.date,r.opType,pn(r.peaks),pn(r.hours),pn(r.earn),rphRow]);
+  });
+
+  // Convert to CSV
+  const csv=rows.map(r=>r.map(v=>{
+    const s=String(v==null?'':v);
+    return s.includes(',')|| s.includes('"')|| s.includes('\n')?`"${s.replace(/"/g,'""')}"`:s;
+  }).join(',')).join('\n');
+
+  const bom='\uFEFF';
+  const blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`Карточка_${name.replace(/ /g,'_')}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+
+// ═══════════════════════ RISK ZONE ═══════════════════════
+let curRiskFilter='all';
+function setRiskFilter(f,el){
+  curRiskFilter=f;
+  document.querySelectorAll('.risk-filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderRisk();
+}
+
+function renderRisk(){
+  const v=getV();
+  const fAll=getF();
+  const oAll=getO();
+  const thresh=pn(document.getElementById('riskThreshold')?.value||20)/100;
+  if(document.getElementById('riskThresholdVal'))
+    document.getElementById('riskThresholdVal').textContent=(thresh*100).toFixed(0)+'%';
+
+  // Build per-employee data
+  const fMap={},oMap={};
+  fAll.forEach(r=>{
+    if(!fMap[r.id])fMap[r.id]={tot:0,prod:0,home:0,cnt:0};
+    const net=pn(r.amount)-pn(r.ret);
+    fMap[r.id].tot+=net; fMap[r.id].cnt++;
+    if(classifyFine(r.reason)==='work') fMap[r.id].prod+=net; else fMap[r.id].home+=net;
+  });
+  oAll.forEach(r=>{
+    if(!oMap[r.id])oMap[r.id]={hr:0,pk:0,er:0};
+    oMap[r.id].hr+=pn(r.hours); oMap[r.id].pk+=pn(r.peaks); oMap[r.id].er+=pn(r.earn);
+  });
+
+  // Compute scores and find median rph
+  const empData=v.map(r=>{
+    const sal=Math.max(0,pn(r.netEarn))*RATE;
+    const fm=fMap[r.id]||{tot:0,prod:0,home:0,cnt:0};
+    const om=oMap[r.id]||{hr:0,pk:0,er:0};
+    const hrs=om.hr||pn(r.hours);
+    const rph=hrs>0?sal/hrs:0;
+    const pph=hrs>0?om.pk/hrs:0;
+    const fineShare=sal>0?fm.tot/sal:0;
+    const isHourly=r.hourly==='Да';
+    const sc=calcScore(rph,fineShare,pph,pn(r.days),isHourly);
+    return{r,sal,fm,om,hrs,rph,pph,fineShare,isHourly,sc};
+  });
+
+  const rphVals=empData.filter(e=>e.rph>0).map(e=>e.rph).sort((a,b)=>a-b);
+  const medianRph=rphVals.length?rphVals[Math.floor(rphVals.length/2)]:0;
+
+  // Flag risks
+  const risks=empData.map(e=>({
+    ...e,
+    riskFines: e.fineShare>=thresh,
+    riskLowRph: e.rph>0 && e.rph<medianRph*0.6 && !e.isHourly,
+    riskHourly: e.isHourly && pn(e.r.days)>0,
+    riskNoShow: pn(e.r.days)===0,
+  })).filter(e=>{
+    const hasRisk=e.riskFines||e.riskLowRph||e.riskHourly;
+    if(!hasRisk)return false;
+    if(curRiskFilter==='all') return true;
+    if(curRiskFilter==='fines') return e.riskFines;
+    if(curRiskFilter==='lowrph') return e.riskLowRph;
+    if(curRiskFilter==='hourly') return e.riskHourly;
+    return true;
+  }).sort((a,b)=>a.sc.score-b.sc.score);
+
+  // Stats
+  const allWithRisk=empData.filter(e=>e.riskFines||e.riskLowRph||e.riskHourly);
+  set('risk-cnt',allWithRisk.length);
+  set('risk-hifine',empData.filter(e=>e.riskFines).length);
+  set('risk-lowrph',empData.filter(e=>e.riskLowRph).length);
+  set('risk-hourly',empData.filter(e=>e.riskHourly).length);
+
+  if(!risks.length){
+    set('riskCards',`<div class="empty"><div class="empty-icon">✅</div><h4>Нет сотрудников в зоне риска</h4><p>По текущим фильтрам всё в порядке</p></div>`);
+    return;
+  }
+
+  set('riskCards',risks.map(e=>{
+    const tags=[];
+    if(e.riskFines) tags.push(`<span class="risk-tag rt-fines">⚠️ Штрафы ${(e.fineShare*100).toFixed(0)}% от ЗП</span>`);
+    if(e.riskLowRph) tags.push(`<span class="risk-tag rt-low-rph">📉 ₽/час ${fmt(e.rph)} (медиана ${fmt(medianRph)})</span>`);
+    if(e.riskHourly) tags.push(`<span class="risk-tag rt-hourly">🕐 Почасовой</span>`);
+
+    const prodFine=e.fm.prod||0;
+    const homeFine=e.fm.home||0;
+    return`<div class="risk-card" onclick="openEmp('${e.r.id}','${e.r._period}')">
+      <div style="display:flex;align-items:flex-start;gap:14px">
+        <div class="score-badge ${e.sc.cls}" style="width:42px;height:42px;font-size:14px;flex-shrink:0">${e.sc.grade}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+            <div style="font-weight:700;font-size:14px">${e.r.fio||'—'}</div>
+            <div style="font-size:12px;color:var(--muted)">${e.r.wh||'—'} · ${e.r.days||0} дн.</div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">${tags.join('')}</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:10px">
+            <div style="background:var(--surface2);border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:var(--muted);margin-bottom:2px">ЗП на руки</div>
+              <div style="font-family:Unbounded;font-size:13px;font-weight:700;color:var(--green)">${fmt(e.sal)}</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:var(--muted);margin-bottom:2px">₽/час (на руки)</div>
+              <div style="font-family:Unbounded;font-size:13px;font-weight:700;color:var(--accent)">${e.rph>0?fmt(e.rph):'—'}</div>
+            </div>
+            ${prodFine>0?`<div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:var(--muted);margin-bottom:2px">Произв. штрафы</div>
+              <div style="font-family:Unbounded;font-size:13px;font-weight:700;color:var(--red)">${fmt(prodFine)}</div>
+            </div>`:''}
+            ${homeFine>0?`<div style="background:var(--surface2);border-radius:8px;padding:8px 10px">
+              <div style="font-size:10px;color:var(--muted);margin-bottom:2px">Буфет</div>
+              <div style="font-family:Unbounded;font-size:13px;font-weight:700;color:var(--muted)">${fmt(homeFine)}</div>
+            </div>`:''}
+          </div>
+          ${e.sc.reasons.length?`<div style="margin-top:8px;font-size:11px;color:var(--muted)">${e.sc.reasons.map(r=>'· '+r).join(' ')}</div>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join(''));
 }
 
 // ═══════════════════════ INIT ═══════════════════════
