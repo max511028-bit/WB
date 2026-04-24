@@ -368,7 +368,7 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
         <div class="table-scroll">
           <table id="tOv"><thead><tr>
             <th onclick="srt('tOv',0)"><span class="tip" data-tip="Рейтинг эффективности A–F:&#10;&#10;A (80–100) — Отлично&#10;B (65–79)  — Хорошо&#10;C (50–64)  — Средне&#10;D (35–49)  — Слабо&#10;F (0–34)   — Проблема&#10;&#10;Считается из 3 факторов:&#10;• ₽/час на руки (40%)&#10;• Доля штрафов от ЗП (35%)&#10;• Пиков/час (25%)&#10;&#10;Почасовые: без учёта пиков">Рейтинг ℹ️</span></th><th>#</th><th onclick="srt('tOv',2)">ФИО</th><th onclick="srt('tOv',3)">ЗП на руки</th>
-            <th onclick="srt('tOv',4)">₽/час</th><th onclick="srt('tOv',5)">Доля штрафов</th>
+            <th onclick="srt('tOv',4)"><span class="tip" data-tip="Рублей в час на руки:&#10;ЗП на руки / часов отработано&#10;Показывает реальную ценность&#10;сотрудника для компании">₽/час</span></th><th onclick="srt('tOv',5)"><span class="tip" data-tip="Доля штрафов от ЗП:&#10;(Все удержания − возвраты) / ЗП&#10;&#10;Норма: &lt;10% 🟢&#10;Внимание: 10–20% 🟡&#10;Риск: &gt;20% 🔴">Доля штрафов</span></th>
             <th onclick="srt('tOv',6)">Штрафы</th><th onclick="srt('tOv',7)">Дней</th>
           </tr></thead><tbody id="bOv"></tbody></table>
         </div>
@@ -393,7 +393,7 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
           <table id="tEmp"><thead><tr>
             <th onclick="srt('tEmp',0)"><span class="tip" data-tip="Рейтинг эффективности A–F:&#10;&#10;A (80–100) — Отлично&#10;B (65–79)  — Хорошо&#10;C (50–64)  — Средне&#10;D (35–49)  — Слабо&#10;F (0–34)   — Проблема&#10;&#10;Считается из 3 факторов:&#10;• ₽/час на руки (40%)&#10;• Доля штрафов от ЗП (35%)&#10;• Пиков/час (25%)&#10;&#10;Почасовые: без учёта пиков">Рейтинг ℹ️</span></th><th onclick="srt('tEmp',1)">ФИО</th>
             <th onclick="srt('tEmp',2)">Склад</th><th onclick="srt('tEmp',3)">ЗП на руки</th>
-            <th onclick="srt('tEmp',4)">₽/час</th><th onclick="srt('tEmp',5)">Доля штрафов</th>
+            <th onclick="srt('tEmp',4)">₽/час</th><th onclick="srt('tEmp',5)"><span class="tip" data-tip="Доля штрафов от ЗП:&#10;(Все удержания − возвраты) / ЗП&#10;&#10;Норма: &lt;10% 🟢&#10;Внимание: 10–20% 🟡&#10;Риск: &gt;20% 🔴">Доля штрафов</span></th>
             <th onclick="srt('tEmp',6)">Штрафы</th><th onclick="srt('tEmp',7)">Пиков</th><th onclick="srt('tEmp',8)">Дней</th><th onclick="srt('tEmp',9)">Тип</th>
           </tr></thead><tbody id="bEmp"></tbody></table>
         </div>
@@ -519,6 +519,7 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
         <div class="tab" onclick="chTab('perf',this)">⚡ Производительность</div>
         <div class="tab" onclick="chTab('fines',this)">⚠️ Штрафы по дням</div>
         <div class="tab" onclick="chTab('optypes',this)">🔧 Типы работ</div>
+        <div class="tab" onclick="chTab('rph',this)">💰 ЗП/час по дням</div>
       </div>
 
       <div id="chDaily">
@@ -537,6 +538,12 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
         <div class="table-card" style="padding:20px">
           <div style="font-family:'Unbounded',sans-serif;font-size:12px;font-weight:600;margin-bottom:16px">Штрафы по дням (сумма)</div>
           <div id="chartFinesWrap" style="overflow-x:auto"></div>
+        </div>
+      </div>
+      <div id="chRph" style="display:none">
+        <div class="table-card" style="padding:20px">
+          <div style="font-family:'Unbounded',sans-serif;font-size:12px;font-weight:600;margin-bottom:16px">ЗП/час по дням (на руки)</div>
+          <div id="chartRphWrap" style="overflow-x:auto"></div>
         </div>
       </div>
       <div id="chOptypes" style="display:none">
@@ -578,31 +585,53 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
 
     <!-- RISK ZONE -->
     <div class="screen" id="screen-risk">
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label">В зоне риска</div><div class="stat-value red" id="risk-cnt">—</div><div class="stat-sub">требуют внимания</div></div>
-        <div class="stat-card"><div class="stat-label">Высокая доля штрафов</div><div class="stat-value red" id="risk-hifine">—</div><div class="stat-sub">> 20% от ЗП</div></div>
-        <div class="stat-card"><div class="stat-label">Низкий ₽/час</div><div class="stat-value yellow" id="risk-lowrph">—</div><div class="stat-sub">ниже медианы</div></div>
-        <div class="stat-card"><div class="stat-label">Только почасовые</div><div class="stat-value blue" id="risk-hourly">—</div><div class="stat-sub">нет сдельной</div></div>
-      </div>
-
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
-        <div style="font-size:13px;color:var(--muted)">Порог доли штрафов:</div>
-        <input type="range" id="riskThreshold" min="5" max="50" value="20" step="5" oninput="renderRisk()" style="accent-color:var(--accent);width:120px">
-        <span id="riskThresholdVal" style="font-family:Unbounded;font-size:13px;font-weight:700;color:var(--accent)">20%</span>
-        <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap" id="riskFilters">
-          <button class="risk-filter-btn active" data-rf="all" onclick="setRiskFilter('all',this)">Все</button>
-          <button class="risk-filter-btn" data-rf="fines" onclick="setRiskFilter('fines',this)">Высокие штрафы</button>
-          <button class="risk-filter-btn" data-rf="lowrph" onclick="setRiskFilter('lowrph',this)">Низкий ₽/час</button>
-          <button class="risk-filter-btn" data-rf="hourly" onclick="setRiskFilter('hourly',this)">Почасовые</button>
+      <!-- Tier counters — clickable -->
+      <div class="stats-grid" style="margin-bottom:16px">
+        <div class="stat-card" style="cursor:pointer" onclick="setRiskGrade('all')" id="risk-tier-all">
+          <div class="stat-label">Все в риске</div>
+          <div class="stat-value" id="risk-cnt">—</div>
+          <div class="stat-sub">суммарно</div>
+        </div>
+        <div class="stat-card" style="cursor:pointer;border-color:rgba(248,113,113,.3)" onclick="setRiskGrade('F')" id="risk-tier-F">
+          <div class="stat-label">Критично (F)</div>
+          <div class="stat-value red" id="risk-cnt-f">—</div>
+          <div class="stat-sub">рейтинг ниже 35</div>
+        </div>
+        <div class="stat-card" style="cursor:pointer" onclick="setRiskGrade('D')" id="risk-tier-D">
+          <div class="stat-label">Внимание (D)</div>
+          <div class="stat-value yellow" id="risk-cnt-d">—</div>
+          <div class="stat-sub">рейтинг 35–49</div>
+        </div>
+        <div class="stat-card" style="cursor:pointer" onclick="setRiskGrade('C')" id="risk-tier-C">
+          <div class="stat-label">Следить (C)</div>
+          <div class="stat-value" style="color:var(--accent)" id="risk-cnt-c">—</div>
+          <div class="stat-sub">рейтинг 50–64</div>
         </div>
       </div>
 
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-        <span style="font-size:12px;color:var(--muted)">Сортировать:</span>
-        <button class="risk-sort-btn active" onclick="setRiskSort('score',this)">По рейтингу</button>
-        <button class="risk-sort-btn" onclick="setRiskSort('fineShare',this)">По доле штрафов</button>
-        <button class="risk-sort-btn" onclick="setRiskSort('rph',this)">По ₽/час</button>
-        <button class="risk-sort-btn" onclick="setRiskSort('sal',this)">По ЗП</button>
+      <!-- Controls -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--muted)">Порог штрафов:</span>
+          <input type="range" id="riskThreshold" min="5" max="50" value="20" step="5"
+            oninput="document.getElementById('riskThresholdVal').textContent=this.value+'%';renderRisk()"
+            style="accent-color:var(--accent);width:100px">
+          <span id="riskThresholdVal" style="font-family:Unbounded;font-size:12px;font-weight:700;color:var(--accent);min-width:36px">20%</span>
+        </div>
+        <div class="quick-filters" style="margin-bottom:0">
+          <button class="qf-btn active" onclick="setRiskType('all',this)">Все проблемы</button>
+          <button class="qf-btn" onclick="setRiskType('fines',this)">⚠️ Высокие штрафы</button>
+          <button class="qf-btn" onclick="setRiskType('lowrph',this)">📉 Низкий ₽/час</button>
+          <button class="qf-btn" onclick="setRiskType('hourly',this)">🕐 Почасовые</button>
+        </div>
+        <div style="margin-left:auto">
+          <select id="riskSortSel" onchange="renderRisk()" class="period-select" style="font-size:12px;padding:6px 10px">
+            <option value="score">↑ По рейтингу</option>
+            <option value="fineShare">↑ По штрафам</option>
+            <option value="rph">↑ По ₽/час</option>
+            <option value="sal">↓ По ЗП</option>
+          </select>
+        </div>
       </div>
       <div id="riskCards"></div>
     </div>
@@ -750,12 +779,12 @@ const OP_CFG={
   'Раскладка':{cls:'b-yellow',color:'#fbbf24'},
   'Приёмка':{cls:'b-orange',color:'#fb923c'},
   'Переупаковка':{cls:'b-purple',color:'#a78bfa'},
-  'Грузчики - Входящий поток':{cls:'b-muted',color:'#6b7494'},
-  'Грузчики - Исходящий поток':{cls:'b-muted',color:'#6b7494'},
-  'Отгрузка':{cls:'b-muted',color:'#6b7494'},
-  'Часы':{cls:'b-muted',color:'#6b7494'},
+  'Грузчики - Входящий поток':{cls:'b-blue',color:'#0ea5e9'},
+  'Грузчики - Исходящий поток':{cls:'b-blue',color:'#7dd3fc'},
+  'Отгрузка':{cls:'b-green',color:'#86efac'},
+  'Часы':{cls:'b-purple',color:'#c084fc'},
 };
-const FT_CFG={penalty:{cls:'b-red',lbl:'Penalty'},tarificator:{cls:'b-orange',lbl:'Тарификатор'},writeoff:{cls:'b-yellow',lbl:'Списание'}};
+const FT_CFG={penalty:{cls:'b-red',lbl:'Потери/нарушения'},tarificator:{cls:'b-orange',lbl:'Брак при работе'},writeoff:{cls:'b-yellow',lbl:'Списание имущества'}};
 
 function pn(v){return parseFloat(String(v||0).replace(',','.'))||0;}
 function fmt(v,d=0){if(v===null||isNaN(v))return'—';return Number(v).toLocaleString('ru-RU',{maximumFractionDigits:d})+' ₽';}
@@ -1966,7 +1995,7 @@ function chTab(id,el){
   document.querySelectorAll('#chTabs .tab').forEach(t=>t.classList.remove('active'));
   if(el)el.classList.add('active');
   curChartTab=id;
-  ['Daily','Perf','Fines','Optypes'].forEach(k=>{
+  ['Daily','Perf','Fines','Optypes','Rph'].forEach(k=>{
     const el2=document.getElementById('ch'+k);
     if(el2)el2.style.display=k.toLowerCase()===id?'block':'none';
   });
@@ -2024,6 +2053,40 @@ function renderCharts(){
   else if(curChartTab==='perf')renderChartPerf(o);
   else if(curChartTab==='fines')renderChartFines(f);
   else if(curChartTab==='optypes')renderChartOptypes(o);
+  else if(curChartTab==='rph')renderChartRph(o,v);
+}
+
+function renderChartRph(o,v){
+  // Build ЗП/час per day — average of all employees who worked that day
+  const vMap={};
+  v.forEach(r=>{
+    const sal=Math.max(0,pn(r.netEarn))*RATE;
+    vMap[r.id]=sal;
+  });
+  const dayMap={};
+  o.forEach(r=>{
+    if(!r.date||!r.id)return;
+    if(!dayMap[r.date])dayMap[r.date]={totalSal:0,totalHrs:0,empHrs:{}};
+    const day=dayMap[r.date];
+    day.totalHrs+=pn(r.hours);
+    if(!day.empHrs[r.id])day.empHrs[r.id]=0;
+    day.empHrs[r.id]+=pn(r.hours);
+  });
+  // For each day: weighted avg ₽/hour
+  const data=Object.entries(dayMap).sort((a,b)=>a[0]<b[0]?-1:1).map(([date,d])=>{
+    let totalEarnProrated=0, totalHrs=0;
+    Object.entries(d.empHrs).forEach(([eid,hrs])=>{
+      const sal=vMap[eid]||0;
+      // Prorate ЗП по часам этого дня vs всего периода
+      const allHrs=o.filter(r=>r.id==eid).reduce((s,r)=>s+pn(r.hours),0);
+      const salDay=allHrs>0?sal*(hrs/allHrs):0;
+      totalEarnProrated+=salDay;
+      totalHrs+=hrs;
+    });
+    const rph=totalHrs>0?totalEarnProrated/totalHrs:0;
+    return{date,val:Math.round(rph)};
+  }).filter(d=>d.val>0);
+  set('chartRphWrap',svgBar(data,{barColor:'#34d399',valueKey:'val',fmt2:v=>v.toFixed(0)+' ₽/ч',avgLine:true}));
 }
 
 function renderChartDaily(o){
@@ -2050,6 +2113,14 @@ function renderChartOptypes(o){
 
 // ── Risk zone ──
 function toggleRiskRow(id){document.getElementById('risk-expand-'+id)?.classList.toggle('open');}
+function setRiskGrade(grade){
+  curRiskGradeFilter=grade;
+  ['all','F','D','C'].forEach(g=>{
+    const el=document.getElementById('risk-tier-'+g);
+    if(el)el.style.borderColor=g===grade?'var(--accent)':'';
+  });
+  renderRisk();
+}
 function setRiskType(type,el){
   curRiskTypeFilter=type;
   document.querySelectorAll('.qf-btn').forEach(b=>b.classList.remove('active'));
@@ -2059,7 +2130,7 @@ function setRiskType(type,el){
 
 function renderRisk(){
   const v=getV(),fAll=getF(),oAll=getO();
-  const thresh=0.20;
+  const thresh=(pn(document.getElementById('riskThreshold')?.value)||20)/100;
   const fMap={},oMap={};
   fAll.forEach(r=>{if(!fMap[r.id])fMap[r.id]={tot:0,prod:0,home:0,cnt:0};const net=pn(r.amount)-pn(r.ret);fMap[r.id].tot+=net;fMap[r.id].cnt++;if(classifyFine(r.reason)==='work')fMap[r.id].prod+=net;else fMap[r.id].home+=net;});
   oAll.forEach(r=>{if(!oMap[r.id])oMap[r.id]={hr:0,pk:0,er:0};oMap[r.id].hr+=pn(r.hours);oMap[r.id].pk+=pn(r.peaks);oMap[r.id].er+=pn(r.earn);});
