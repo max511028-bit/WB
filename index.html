@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Выработка сотрудников — WB Аутсорсинг</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #151820;
+    --surface2: #1c2030;
+    --border: #252a3a;
+    --accent: #6c8fff;
+    --accent2: #a78bfa;
+    --green: #34d399;
+    --red: #f87171;
+    --yellow: #fbbf24;
+    --text: #e8ecf5;
+    --muted: #6b7494;
+    --card-glow: 0 0 0 1px var(--border), 0 4px 24px rgba(108,143,255,0.06);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Golos Text', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    padding: 0 0 24px;
+  }
+
+  .logo {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    line-height: 1.4;
+  }
+  .logo-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .nav { padding: 16px 12px; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.18s;
+    font-weight: 500;
+    border: 1px solid transparent;
+    user-select: none;
+  }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active {
+    color: var(--accent);
+    background: rgba(108,143,255,0.1);
+    border-color: rgba(108,143,255,0.2);
+  }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+  .sidebar-bottom { padding: 12px 12px 0; border-top: 1px solid var(--border); }
+
+  /* ── MAIN ── */
+  .main {
+    margin-left: 220px;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  .topbar {
+    position: sticky; top: 0;
+    background: rgba(13,15,20,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    z-index: 50;
+  }
+
+  .page-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+  .period-select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Golos Text', sans-serif;
+    font-size: 13px;
+    padding: 8px 12px;
+    cursor: pointer;
+    outline: none;
+  }
+  .period-select:focus { border-color: var(--accent); }
+
+  .search-wrap {
+    position: relative;
+  }
+  .search-wrap svg {
+    position: absolute;
+    left: 10px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    width: 14px; height: 14px;
+  }
+  #searchInput {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Golos Text', sans-serif;
+    font-size: 13px;
+    padding: 8px 12px 8px 32px;
+    width: 220px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  #searchInput:focus { border-color: var(--accent); }
+  #searchInput::placeholder { color: var(--muted); }
+
+  /* ── CONTENT ── */
+  .content { padding: 28px 32px; }
+
+  /* ── SCREENS ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── STAT CARDS ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--card-glow);
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); border-color: rgba(108,143,255,0.3); }
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .stat-card:hover::after { opacity: 1; }
+
+  .stat-label { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+  .stat-value { font-family: 'Unbounded', sans-serif; font-size: 22px; font-weight: 700; color: var(--text); }
+  .stat-value.green { color: var(--green); }
+  .stat-value.red { color: var(--red); }
+  .stat-value.yellow { color: var(--yellow); }
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  /* ── TABLE ── */
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--card-glow);
+  }
+
+  .table-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .table-header h3 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .table-count {
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--surface2);
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+  }
+
+  .table-scroll { overflow-x: auto; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: var(--surface2); }
+  th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s;
+    position: relative;
+  }
+  th:hover { color: var(--text); }
+  th.sorted-asc::after { content: ' ↑'; color: var(--accent); }
+  th.sorted-desc::after { content: ' ↓'; color: var(--accent); }
+
+  tbody tr {
+    border-top: 1px solid var(--border);
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  tbody tr:hover { background: var(--surface2); }
+
+  td {
+    padding: 13px 16px;
+    font-size: 13.5px;
+    white-space: nowrap;
+  }
+
+  .td-name { font-weight: 600; color: var(--text); }
+  .td-id { font-size: 11px; color: var(--muted); font-family: monospace; }
+  .td-money { font-family: 'Unbounded', sans-serif; font-size: 13px; font-weight: 600; }
+  .td-money.green { color: var(--green); }
+  .td-money.red { color: var(--red); }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-red { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.25); }
+  .badge-green { background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.25); }
+  .badge-yellow { background: rgba(251,191,36,0.15); color: var(--yellow); border: 1px solid rgba(251,191,36,0.25); }
+
+  /* ── MODAL (Employee Detail) ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 700px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(108,143,255,0.1);
+    animation: modalIn 0.22s ease;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.96) translateY(8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-head {
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .modal-name {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .modal-id { font-size: 12px; color: var(--muted); margin-top: 4px; font-family: monospace; }
+
+  .modal-close {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 8px;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .modal-close:hover { color: var(--text); border-color: var(--accent); }
+
+  .modal-body { padding: 24px 28px; }
+
+  .modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .modal-stat {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .modal-stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .modal-stat-value { font-family: 'Unbounded', sans-serif; font-size: 17px; font-weight: 700; }
+
+  .detail-section { margin-bottom: 20px; }
+  .detail-section h4 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13.5px;
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-row-label { color: var(--muted); }
+  .detail-row-value { font-weight: 600; }
+  .detail-row-value.neg { color: var(--red); }
+  .detail-row-value.pos { color: var(--green); }
+  .detail-row-value.big {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 15px;
+    color: var(--green);
+  }
+
+  /* ── FINES SCREEN ── */
+  .fines-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  /* ── ADMIN SCREEN ── */
+  .admin-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--card-glow);
+  }
+  .admin-card h3 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 18px;
+    color: var(--text);
+  }
+
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  .form-input, .form-select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Golos Text', sans-serif;
+    font-size: 14px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--accent); }
+  .form-select option { background: var(--surface); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-family: 'Golos Text', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.18s;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: #5a7aff; transform: translateY(-1px); }
+  .btn-danger { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+  .btn-danger:hover { background: rgba(248,113,113,0.25); }
+  .btn-ghost { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 36px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .upload-zone:hover { border-color: var(--accent); background: rgba(108,143,255,0.04); }
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+  .upload-icon { font-size: 32px; margin-bottom: 10px; }
+  .upload-text { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .upload-hint { font-size: 12px; color: var(--muted); }
+
+  .admin-table-wrap { overflow-x: auto; }
+
+  .periods-list { display: flex; flex-direction: column; gap: 8px; }
+  .period-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 13.5px;
+  }
+  .period-item-left { display: flex; align-items: center; gap: 12px; }
+  .period-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+  .period-name { font-weight: 600; }
+  .period-count { font-size: 12px; color: var(--muted); }
+  .period-actions { display: flex; gap: 6px; }
+
+  .alert {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .alert-success { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.25); color: var(--green); }
+  .alert-error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.25); color: var(--red); }
+  .alert.show { display: block; }
+
+  .config-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    font-family: monospace;
+    word-break: break-all;
+  }
+  .config-box span { color: var(--accent); }
+
+  /* ── NO DATA ── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state h4 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .empty-state p { font-size: 13px; }
+
+  /* ── TABS (in modal/fines) ── */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; }
+  .tab {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--muted);
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .tab.active { color: var(--accent); background: rgba(108,143,255,0.1); border-color: rgba(108,143,255,0.2); }
+  .tab:hover:not(.active) { color: var(--text); background: var(--surface2); }
+
+  /* ── LOADING ── */
+  .loading-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(13,15,20,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .loading-overlay.show { display: flex; }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .gs-url-hint { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.6; }
+  .gs-url-hint code { color: var(--accent); background: rgba(108,143,255,0.1); padding: 2px 5px; border-radius: 4px; font-size: 11px; }
+
+  @media (max-width: 1100px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 800px) {
+    .sidebar { width: 60px; }
+    .logo-title, .logo-sub, .nav-item span { display: none; }
+    .main { margin-left: 60px; }
+    .content { padding: 20px 16px; }
+    .topbar { padding: 12px 16px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .modal-grid { grid-template-columns: 1fr 1fr; }
+    .fines-summary { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div style="font-size:13px;color:var(--muted)">Загрузка данных…</div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-title">WB<br>АУТСОРСИНГ</div>
+    <div class="logo-sub">Личный кабинет</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-item active" data-screen="overview" onclick="switchScreen('overview', this)">
+      <span class="nav-icon">📊</span>
+      <span>Обзор</span>
+    </div>
+    <div class="nav-item" data-screen="employees" onclick="switchScreen('employees', this)">
+      <span class="nav-icon">👥</span>
+      <span>Сотрудники</span>
+    </div>
+    <div class="nav-item" data-screen="fines" onclick="switchScreen('fines', this)">
+      <span class="nav-icon">⚠️</span>
+      <span>Штрафы</span>
+    </div>
+    <div class="nav-item" data-screen="performance" onclick="switchScreen('performance', this)">
+      <span class="nav-icon">⚡</span>
+      <span>Производительность</span>
+    </div>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="nav-item" data-screen="admin" onclick="switchScreen('admin', this)">
+      <span class="nav-icon">⚙️</span>
+      <span>Админка</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Обзор</div>
+    <div class="topbar-right">
+      <select class="period-select" id="periodSelect" onchange="onPeriodChange()">
+        <option value="all">Все периоды</option>
+      </select>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" placeholder="Поиск по ФИО…" oninput="onSearch()">
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══ OVERVIEW ═══ -->
+    <div class="screen active" id="screen-overview">
+      <div class="stats-grid" id="overviewStats">
+        <div class="stat-card">
+          <div class="stat-label">Сотрудников</div>
+          <div class="stat-value" id="ov-total">—</div>
+          <div class="stat-sub" id="ov-period-label">за период</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Общий ФОТ</div>
+          <div class="stat-value green" id="ov-fot">—</div>
+          <div class="stat-sub">ЗП на руки (сумма)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Общие штрафы</div>
+          <div class="stat-value red" id="ov-fines">—</div>
+          <div class="stat-sub">за период</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Ср. пиков / смена</div>
+          <div class="stat-value yellow" id="ov-peaks">—</div>
+          <div class="stat-sub">производительность</div>
+        </div>
+      </div>
+
+      <!-- Top earners table -->
+      <div class="table-card">
+        <div class="table-header">
+          <h3>Топ сотрудников по заработку</h3>
+          <span class="table-count" id="topCount">0 чел.</span>
+        </div>
+        <div class="table-scroll">
+          <table id="topTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th onclick="sortTable('topTable',1)">ФИО</th>
+                <th onclick="sortTable('topTable',2)">ЗП на руки</th>
+                <th onclick="sortTable('topTable',3)">Штрафы</th>
+                <th onclick="sortTable('topTable',4)">Пиков</th>
+                <th onclick="sortTable('topTable',5)">Смен</th>
+                <th onclick="sortTable('topTable',6)">Часов</th>
+              </tr>
+            </thead>
+            <tbody id="topTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ EMPLOYEES ═══ -->
+    <div class="screen" id="screen-employees">
+      <div class="table-card">
+        <div class="table-header">
+          <h3>Все сотрудники</h3>
+          <span class="table-count" id="empCount">0 чел.</span>
+        </div>
+        <div class="table-scroll">
+          <table id="empTable">
+            <thead>
+              <tr>
+                <th onclick="sortTable('empTable',0)">ID</th>
+                <th onclick="sortTable('empTable',1)">ФИО</th>
+                <th onclick="sortTable('empTable',2)">Склад</th>
+                <th onclick="sortTable('empTable',3)">ЗП на руки</th>
+                <th onclick="sortTable('empTable',4)">Выработка</th>
+                <th onclick="sortTable('empTable',5)">Вычеты</th>
+                <th onclick="sortTable('empTable',6)">Пиков</th>
+                <th onclick="sortTable('empTable',7)">Дней</th>
+                <th onclick="sortTable('empTable',8)">Часов</th>
+              </tr>
+            </thead>
+            <tbody id="empTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ FINES ═══ -->
+    <div class="screen" id="screen-fines">
+      <div class="fines-summary">
+        <div class="stat-card">
+          <div class="stat-label">Штрафы (всего)</div>
+          <div class="stat-value red" id="fn-total">—</div>
+          <div class="stat-sub">по тарификатору + penalty</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Возвраты штрафов</div>
+          <div class="stat-value green" id="fn-returns">—</div>
+          <div class="stat-sub">возвращено сотрудникам</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Чистые штрафы</div>
+          <div class="stat-value yellow" id="fn-net">—</div>
+          <div class="stat-sub">штрафы − возвраты</div>
+        </div>
+      </div>
+
+      <div class="tabs" id="finesTabs">
+        <div class="tab active" onclick="switchFinesTab('summary', this)">Сводка по сотрудникам</div>
+        <div class="tab" onclick="switchFinesTab('detail', this)">Детализация</div>
+      </div>
+
+      <div id="finesTabSummary">
+        <div class="table-card">
+          <div class="table-header">
+            <h3>Штрафы по сотрудникам</h3>
+            <span class="table-count" id="finesCount">0 чел.</span>
+          </div>
+          <div class="table-scroll">
+            <table id="finesTable">
+              <thead>
+                <tr>
+                  <th onclick="sortTable('finesTable',0)">ФИО</th>
+                  <th onclick="sortTable('finesTable',1)">Штраф тариф.</th>
+                  <th onclick="sortTable('finesTable',2)">Штраф penalty</th>
+                  <th onclick="sortTable('finesTable',3)">Возврат штр.</th>
+                  <th onclick="sortTable('finesTable',4)">Списания</th>
+                  <th onclick="sortTable('finesTable',5)">Возврат спис.</th>
+                  <th onclick="sortTable('finesTable',6)">ИТОГО удержано</th>
+                </tr>
+              </thead>
+              <tbody id="finesTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="finesTabDetail" style="display:none">
+        <div class="table-card">
+          <div class="table-header">
+            <h3>Детализация вычетов</h3>
+            <span class="table-count" id="finesDetailCount"></span>
+          </div>
+          <div class="table-scroll">
+            <table id="finesDetailTable">
+              <thead>
+                <tr>
+                  <th onclick="sortTable('finesDetailTable',0)">ФИО</th>
+                  <th onclick="sortTable('finesDetailTable',1)">Тип</th>
+                  <th onclick="sortTable('finesDetailTable',2)">Сумма</th>
+                  <th onclick="sortTable('finesDetailTable',3)">Период</th>
+                </tr>
+              </thead>
+              <tbody id="finesDetailBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PERFORMANCE ═══ -->
+    <div class="screen" id="screen-performance">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Всего пиков</div>
+          <div class="stat-value yellow" id="pf-peaks">—</div>
+          <div class="stat-sub">за период</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Всего смен</div>
+          <div class="stat-value" id="pf-days">—</div>
+          <div class="stat-sub">рабочих дней</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Всего часов</div>
+          <div class="stat-value" id="pf-hours">—</div>
+          <div class="stat-sub">отработано</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Ср. смена</div>
+          <div class="stat-value" id="pf-avgshift">—</div>
+          <div class="stat-sub">часов</div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <h3>Производительность сотрудников</h3>
+          <span class="table-count" id="pfCount">0 чел.</span>
+        </div>
+        <div class="table-scroll">
+          <table id="pfTable">
+            <thead>
+              <tr>
+                <th onclick="sortTable('pfTable',0)">ФИО</th>
+                <th onclick="sortTable('pfTable',1)">Пиков</th>
+                <th onclick="sortTable('pfTable',2)">Дней</th>
+                <th onclick="sortTable('pfTable',3)">Часов</th>
+                <th onclick="sortTable('pfTable',4)">Пиков/час</th>
+                <th onclick="sortTable('pfTable',5)">Ср. смена, ч</th>
+                <th onclick="sortTable('pfTable',6)">Последний пик</th>
+              </tr>
+            </thead>
+            <tbody id="pfTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ADMIN ═══ -->
+    <div class="screen" id="screen-admin">
+
+      <!-- Google Sheets connection -->
+      <div class="admin-card">
+        <h3>🔗 Подключение Google Sheets</h3>
+        <div class="alert alert-success" id="gsAlert"></div>
+        <div class="form-group">
+          <label class="form-label">URL Google Sheets (публичная таблица)</label>
+          <input type="text" class="form-input" id="gsUrl" placeholder="https://docs.google.com/spreadsheets/d/XXXXXXXX/edit">
+          <div class="gs-url-hint">
+            Таблица должна быть открыта по ссылке.<br>
+            Нажми <code>Файл → Поделиться → Открыть доступ</code> → Все у кого есть ссылка → Читатель.<br>
+            Нужный лист должен называться <code>Выработка</code>.
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="connectGoogleSheets()">Подключить и загрузить</button>
+          <button class="btn btn-ghost" onclick="loadDemoData()">📋 Загрузить демо-данные</button>
+        </div>
+      </div>
+
+      <!-- Manual period add -->
+      <div class="admin-card">
+        <h3>📤 Добавить период вручную (CSV / вставка данных)</h3>
+        <div class="alert alert-success" id="addAlert"></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Название периода</label>
+            <input type="text" class="form-input" id="periodName" placeholder="01.03.2026 – 15.03.2026">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Дата начала</label>
+            <input type="date" class="form-input" id="periodStart">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Вставить данные (TSV — скопировать из Excel/Sheets)</label>
+          <textarea class="form-input" id="tsvData" rows="6" placeholder="ID&#9;ФИО&#9;Дата найма&#9;... вставьте строки из Excel&#10;5632830&#9;Никушин Владимир Андреевич&#9;09.02.2026&#9;..." style="resize:vertical;font-family:monospace;font-size:12px"></textarea>
+          <div class="gs-url-hint">Скопируйте строки из Excel (включая заголовок) и вставьте сюда. Разделитель — табуляция.</div>
+        </div>
+        <button class="btn btn-primary" onclick="addPeriodManual()">Добавить период</button>
+      </div>
+
+      <!-- Periods list -->
+      <div class="admin-card">
+        <h3>📅 Загруженные периоды</h3>
+        <div class="periods-list" id="periodsList">
+          <div class="empty-state" style="padding:30px 20px">
+            <div class="empty-state-icon">📂</div>
+            <p>Нет загруженных периодов</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<!-- EMPLOYEE MODAL -->
+<div class="modal-overlay" id="empModal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-name" id="modalName">—</div>
+        <div class="modal-id" id="modalId">—</div>
+      </div>
+      <div class="modal-close" onclick="document.getElementById('empModal').classList.remove('open')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-grid">
+        <div class="modal-stat">
+          <div class="modal-stat-label">ЗП на руки</div>
+          <div class="modal-stat-value" id="mdSalary" style="color:var(--green)">—</div>
+        </div>
+        <div class="modal-stat">
+          <div class="modal-stat-label">Штрафы (чистые)</div>
+          <div class="modal-stat-value" id="mdFines" style="color:var(--red)">—</div>
+        </div>
+        <div class="modal-stat">
+          <div class="modal-stat-label">Пиков</div>
+          <div class="modal-stat-value" id="mdPeaks" style="color:var(--yellow)">—</div>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <h4>💰 Заработок</h4>
+        <div class="detail-row"><span class="detail-row-label">Выработка по тарификатору</span><span class="detail-row-value" id="md-tariف">—</span></div>
+        <div class="detail-row"><span class="detail-row-label">Общая выработка</span><span class="detail-row-value" id="md-total">—</span></div>
+        <div class="detail-row"><span class="detail-row-label">Общие вычеты</span><span class="detail-row-value neg" id="md-deductions">—</span></div>
+        <div class="detail-row"><span class="detail-row-label">Набавка 10% (премия)</span><span class="detail-row-value pos" id="md-bonus">—</span></div>
+        <div class="detail-row" style="background:rgba(52,211,153,0.05);border-radius:8px;padding:10px 8px;margin-top:4px">
+          <span class="detail-row-label" style="font-weight:600;color:var(--text)">ЗП на руки</span>
+          <span class="detail-row-value big" id="md-salary-final">—</span>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <h4>⚠️ Штрафы и вычеты</h4>
+        <div class="detail-row"><span class="detail-row-label">Штрафы по тарификатору</span><span class="detail-row-value neg" id="md-f1">—</span></div>
+        <div class="detail-row"><span class="detail-row-label">Штрафы penalty</span><span class="detail-row-value neg" id="md-f2">—</span></div>
+        <div class="detail-row"><span class="detail-row-label">Возврат штрафов</span><span class="detail-row-value pos" id="md-fr">—</span></div>
+        <div class="detail-row"><span class="detail-row-label">Списания</span><span class="detail-row-value neg" id="md-wr">—</span></div>
+        <div class="detail-row"><span class="detail-row-label">Возврат списаний</span><span class="detail-row-value pos" id="md-wrr">—</span></div>
+      </div>
+
+      <div class="detail-section">
+        <h4>⚡ Производительность</h4>
+        <div class="detail-row"><span class="detail-row-label">Рабочих дней</span><span class="detail-row-value" id="md-days">—</span></div>
+        <div class="detail-row"><span class="detail-row-label">Отработано часов</span><span class="detail-row-value" id="md-hours">—</span></div>
+        <div class="detail-row"><span class="detail-row-label">Ср. длительность смены</span><span class="detail-row-value" id="md-shift">—</span></div>
+        <div class="detail-row"><span class="detail-row-label">Совершено пиков</span><span class="detail-row-value" id="md-peaks2">—</span></div>
+        <div class="detail-row"><span class="detail-row-label">Склад</span><span class="detail-row-value" id="md-warehouse">—</span></div>
+        <div class="detail-row"><span class="detail-row-label">Дата найма</span><span class="detail-row-value" id="md-hire">—</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA LAYER
+// ═══════════════════════════════════════════════
+let allPeriods = {}; // { "01.03-15.03": [{...}, ...] }
+let currentPeriod = 'all';
+let currentSearch = '';
+let sortState = {};
+
+const COL = {
+  ID: 'id', FIO: 'fio', HIRE: 'hire', WAREHOUSE: 'warehouse',
+  LAST_PEAK_DATE: 'lastPeakDate', FIRST_PEAK_WH: 'firstPeakWH',
+  DAYS: 'days', HOURS: 'hours', AVG_SHIFT: 'avgShift', PEAKS: 'peaks',
+  TARIF: 'tarif', FINE_TARIF: 'fineTarif', RETURN_PENALTY: 'returnPenalty',
+  FINE_PENALTY: 'finePenalty', RETURN_WRITE: 'returnWrite', WRITE_OFF: 'writeOff',
+  TOTAL_EARN: 'totalEarn', TOTAL_EARN_30: 'totalEarn30',
+  DEDUCTIONS: 'deductions', SALARY: 'salary',
+  BONUS10: 'bonus10', EARN_AFTER: 'earnAfter', NET_EARN: 'netEarn',
+  KA_PAY: 'kaPay', RATIO: 'ratio', OLD_SYS: 'oldSys', OLD_RATIO: 'oldRatio'
+};
+
+const HEADERS_MAP = [
+  'id','fio','hire','warehouse','lastPeakDate','firstPeakWH',
+  'days','hours','avgShift','peaks',
+  'tarif','fineTarif','returnPenalty','finePenalty','returnWrite','writeOff',
+  'totalEarn','totalEarn30','deductions','salary',
+  'bonus10','earnAfter','netEarn',
+  'kaPay','ratio','oldSys','oldRatio'
+];
+
+// ─── HELPERS ───
+function fmt(v) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  return Number(v).toLocaleString('ru-RU', {maximumFractionDigits: 0}) + ' ₽';
+}
+function fmtN(v, dec=1) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  return Number(v).toLocaleString('ru-RU', {maximumFractionDigits: dec});
+}
+function parseNum(v) {
+  if (v === '' || v === null || v === undefined) return 0;
+  return parseFloat(String(v).replace(',','.')) || 0;
+}
+
+function getRows() {
+  let rows = [];
+  if (currentPeriod === 'all') {
+    Object.values(allPeriods).forEach(p => rows = rows.concat(p.rows));
+  } else {
+    rows = (allPeriods[currentPeriod]?.rows) || [];
+  }
+  if (currentSearch) {
+    const q = currentSearch.toLowerCase();
+    rows = rows.filter(r => (r.fio||'').toLowerCase().includes(q));
+  }
+  return rows;
+}
+
+// ─── PARSE TSV ───
+function parseTSV(tsv, periodName) {
+  const lines = tsv.trim().split('\n').filter(l => l.trim());
+  if (!lines.length) return [];
+  // Detect if first line is header
+  const firstCells = lines[0].split('\t');
+  let dataStart = 0;
+  if (isNaN(parseFloat(firstCells[0]))) dataStart = 1; // skip header row
+
+  const rows = [];
+  for (let i = dataStart; i < lines.length; i++) {
+    const cells = lines[i].split('\t');
+    if (!cells[0]) continue;
+    const r = {};
+    HEADERS_MAP.forEach((key, idx) => { r[key] = cells[idx] !== undefined ? cells[idx].trim() : ''; });
+    r._period = periodName;
+    rows.push(r);
+  }
+  return rows;
+}
+
+// ─── DEMO DATA (from the uploaded file) ───
+function loadDemoData() {
+  const demo = [
+    {id:'5632830',fio:'Никушин Владимир Андреевич',hire:'09.02.2026',warehouse:'Екатеринбург',lastPeakDate:'17.03.2026',days:9,hours:109.02,avgShift:7.27,peaks:49523,tarif:104224,fineTarif:0,returnPenalty:0,finePenalty:15099,returnWrite:1498,writeOff:1909,totalEarn:105722,totalEarn30:74005,deductions:17008,salary:56997,bonus10:5699,earnAfter:62696,netEarn:88714},
+    {id:'4910874',fio:'Рахмонов Хабибулло Абдумедасирович',hire:'26.08.2025',warehouse:'Екатеринбург',lastPeakDate:'17.03.2026',days:12,hours:133.86,avgShift:8.68,peaks:76246,tarif:105840,fineTarif:450,returnPenalty:91,finePenalty:19672,returnWrite:1412,writeOff:3596,totalEarn:107343,totalEarn30:75140,deductions:23718,salary:51422,bonus10:5142,earnAfter:56564,netEarn:83625},
+    {id:'5091921',fio:'Козлов Никита Григорьевич',hire:'15.10.2025',warehouse:'Екатеринбург',lastPeakDate:'16.03.2026',days:5,hours:61.53,avgShift:4.10,peaks:17584,tarif:87933,fineTarif:1000,returnPenalty:12,finePenalty:12792,returnWrite:1500,writeOff:3039,totalEarn:89445,totalEarn30:62611,deductions:16831,salary:45780,bonus10:4578,earnAfter:50358,netEarn:72614},
+    {id:'4744294',fio:'Саидов Музаффар Рустамович',hire:'31.07.2025',warehouse:'Екатеринбург',lastPeakDate:'17.03.2026',days:15,hours:113.32,avgShift:7.55,peaks:43005,tarif:85491,fineTarif:400,returnPenalty:78,finePenalty:14601,returnWrite:3815,writeOff:5161,totalEarn:89384,totalEarn30:62568,deductions:20162,salary:42406,bonus10:4240,earnAfter:46646,netEarn:69222},
+    {id:'5717607',fio:'Шеин Вадим Юрьевич',hire:'27.02.2026',warehouse:'Екатеринбург',lastPeakDate:'14.03.2026',days:10,hours:97.26,avgShift:6.48,peaks:11534,tarif:65343,fineTarif:0,returnPenalty:0,finePenalty:1324,returnWrite:1618,writeOff:3977,totalEarn:66961,totalEarn30:46872,deductions:5301,salary:41571,bonus10:4157,earnAfter:45728,netEarn:61660},
+    {id:'4894457',fio:'Шукуров Шамсидин Курбонович',hire:'19.08.2025',warehouse:'Екатеринбург',lastPeakDate:'17.03.2026',days:9,hours:110.95,avgShift:6.02,peaks:39666,tarif:73035,fineTarif:200,returnPenalty:367,finePenalty:12019,returnWrite:0,writeOff:624,totalEarn:73402,totalEarn30:51381,deductions:12843,salary:38538,bonus10:3853,earnAfter:42392,netEarn:60559},
+    {id:'4910884',fio:'Джаборов Аюбджон Ахмадович',hire:'26.08.2025',warehouse:'Екатеринбург',lastPeakDate:'17.03.2026',days:12,hours:68.84,avgShift:4.59,peaks:43031,tarif:71236,fineTarif:1400,returnPenalty:0,finePenalty:8860,returnWrite:1108,writeOff:3464,totalEarn:72344,totalEarn30:50640,deductions:13724,salary:36916,bonus10:3691,earnAfter:40608,netEarn:58620},
+    {id:'4955976',fio:'Шарипов Исломбек Иноятович',hire:'11.09.2025',warehouse:'Екатеринбург',lastPeakDate:'17.03.2026',days:11,hours:106.94,avgShift:7.13,peaks:12182,tarif:59430,fineTarif:200,returnPenalty:90,finePenalty:5500,returnWrite:124,writeOff:590,totalEarn:59644,totalEarn30:41750,deductions:6290,salary:35460,bonus10:3546,earnAfter:39006,netEarn:53354},
+    {id:'4951349',fio:'Эмомзода Бахтовар Диловаршо',hire:'10.09.2025',warehouse:'Екатеринбург',lastPeakDate:'17.03.2026',days:9,hours:79.76,avgShift:4.56,peaks:35998,tarif:72577,fineTarif:400,returnPenalty:784,finePenalty:16669,returnWrite:1999,writeOff:1630,totalEarn:75360,totalEarn30:52752,deductions:18699,salary:34053,bonus10:3405,earnAfter:37458,netEarn:56661},
+    {id:'4741846',fio:'Аимов Рамазон Худойназарович',hire:'31.07.2025',warehouse:'Екатеринбург',lastPeakDate:'17.03.2026',days:14,hours:102.85,avgShift:6.86,peaks:41869,tarif:85768,fineTarif:600,returnPenalty:500,finePenalty:27264,returnWrite:358,writeOff:2472,totalEarn:86626,totalEarn30:60638,deductions:30336,salary:30302,bonus10:3030,earnAfter:33332,netEarn:56290},
+    {id:'4918638',fio:'Умаров Хуршед Сухробович',hire:'29.08.2025',warehouse:'Екатеринбург',lastPeakDate:'15.03.2026',days:10,hours:73.04,avgShift:4.61,peaks:29290,tarif:55774,fineTarif:1200,returnPenalty:643,finePenalty:7325,returnWrite:107,writeOff:2744,totalEarn:56524,totalEarn30:39566,deductions:11269,salary:28297,bonus10:2829,earnAfter:31127,netEarn:45255},
+    {id:'5579463',fio:'Магданов Рустам Фаритович',hire:'30.01.2026',warehouse:'Екатеринбург',lastPeakDate:'16.03.2026',days:11,hours:113.3,avgShift:7.55,peaks:27501,tarif:56983,fineTarif:0,returnPenalty:133,finePenalty:11848,returnWrite:136,writeOff:807,totalEarn:57252,totalEarn30:40076,deductions:12655,salary:27421,bonus10:2742,earnAfter:30163,netEarn:44597},
+    {id:'4758750',fio:'Охунов Абдухаким Абдулатифович',hire:'01.08.2025',warehouse:'Екатеринбург',lastPeakDate:'16.03.2026',days:12,hours:93.56,avgShift:6.24,peaks:35873,tarif:58648,fineTarif:1200,returnPenalty:65,finePenalty:11931,returnWrite:667,writeOff:1373,totalEarn:59380,totalEarn30:41566,deductions:14504,salary:27062,bonus10:2706,earnAfter:29768,netEarn:44876},
+    {id:'5740327',fio:'Казырицкий Михаил Валерьевич',hire:'04.03.2026',warehouse:'Екатеринбург',lastPeakDate:'17.03.2026',days:8,hours:97.71,avgShift:6.74,peaks:20090,tarif:44613,fineTarif:500,returnPenalty:0,finePenalty:1005,returnWrite:203,writeOff:2369,totalEarn:44816,totalEarn30:31371,deductions:3874,salary:27497,bonus10:2749,earnAfter:30246,netEarn:40942},
+    {id:'5672146',fio:'Полетаев Родион Сергеевич',hire:'17.02.2026',warehouse:'Екатеринбург',lastPeakDate:'—',days:9,hours:84.42,avgShift:5.63,peaks:10256,tarif:41765,fineTarif:400,returnPenalty:0,finePenalty:2477,returnWrite:1242,writeOff:214,totalEarn:43007,totalEarn30:30104,deductions:3091,salary:27013,bonus10:2701,earnAfter:29715,netEarn:39916},
+    {id:'4963020',fio:'Алиджонова Маърифат Пулотовна',hire:'13.09.2025',warehouse:'Екатеринбург',lastPeakDate:'17.03.2026',days:7,hours:71.93,avgShift:4.42,peaks:26112,tarif:39294,fineTarif:0,returnPenalty:0,finePenalty:994,returnWrite:168,writeOff:566,totalEarn:39462,totalEarn30:27623,deductions:1560,salary:26063,bonus10:2606,earnAfter:28669,netEarn:37902},
+    {id:'5740309',fio:'Поляков Андрей Александрович',hire:'04.03.2026',warehouse:'Екатеринбург',lastPeakDate:'17.03.2026',days:9,hours:103.99,avgShift:7.3,peaks:21445,tarif:48114,fineTarif:0,returnPenalty:0,finePenalty:7674,returnWrite:273,writeOff:1958,totalEarn:48387,totalEarn30:33870,deductions:9632,salary:24238,bonus10:2423,earnAfter:26662,netEarn:38755},
+    {id:'5653434',fio:'Алиджонзода Джовид Алиджон',hire:'12.02.2026',warehouse:'Екатеринбург',lastPeakDate:'14.03.2026',days:8,hours:61.07,avgShift:4.07,peaks:19263,tarif:42704,fineTarif:1000,returnPenalty:0,finePenalty:3009,returnWrite:206,writeOff:1634,totalEarn:42910,totalEarn30:30036,deductions:5643,salary:24393,bonus10:2439,earnAfter:26833,netEarn:37267},
+    {id:'4867168',fio:'Холов Амиджон Мадвалиевич',hire:'08.08.2025',warehouse:'Екатеринбург',lastPeakDate:'17.03.2026',days:8,hours:57.5,avgShift:3.04,peaks:20607,tarif:41898,fineTarif:400,returnPenalty:326,finePenalty:5175,returnWrite:463,writeOff:902,totalEarn:42687,totalEarn30:29880,deductions:6477,salary:23403,bonus10:2340,earnAfter:25744,netEarn:36210},
+    {id:'4743962',fio:'Мукумов Шерзод Зафарович',hire:'31.07.2025',warehouse:'Екатеринбург',lastPeakDate:'15.03.2026',days:6,hours:49.87,avgShift:2.81,peaks:24080,tarif:45125,fineTarif:0,returnPenalty:148,finePenalty:7920,returnWrite:12457,writeOff:10370,totalEarn:57730,totalEarn30:40411,deductions:18290,salary:22121,bonus10:2212,earnAfter:24333,netEarn:39440},
+  ].map(r => ({ ...r, _period: '01.03 – 15.03.2026' }));
+
+  allPeriods['01.03 – 15.03.2026'] = { label: '01.03 – 15.03.2026', rows: demo };
+  renderPeriodSelect();
+  renderPeriodsList();
+  refreshAll();
+  showAlert('addAlert', '✅ Демо-данные загружены (20 сотрудников)', 'success');
+}
+
+// ─── GOOGLE SHEETS ───
+async function connectGoogleSheets() {
+  const url = document.getElementById('gsUrl').value.trim();
+  if (!url) { showAlert('gsAlert','⚠️ Введите URL таблицы','error'); return; }
+
+  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (!match) { showAlert('gsAlert','⚠️ Не удалось найти ID таблицы в URL','error'); return; }
+  const sheetId = match[1];
+
+  showLoading(true);
+  try {
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=Выработка`;
+    const resp = await fetch(csvUrl);
+    if (!resp.ok) throw new Error('Ошибка загрузки');
+    const text = await resp.text();
+    const rows = parseCSVGoogle(text, 'Google Sheets');
+    if (!rows.length) throw new Error('Нет данных');
+
+    const periodName = 'Google Sheets';
+    allPeriods[periodName] = { label: 'Google Sheets (актуальные)', rows };
+    renderPeriodSelect();
+    renderPeriodsList();
+    refreshAll();
+    showAlert('gsAlert', `✅ Загружено ${rows.length} сотрудников из Google Sheets`, 'success');
+    localStorage.setItem('wb_gs_url', url);
+    localStorage.setItem('wb_gs_id', sheetId);
+  } catch(e) {
+    showAlert('gsAlert', '❌ Ошибка: ' + e.message + '. Убедитесь что таблица открыта (Все у кого есть ссылка → Читатель)', 'error');
+  }
+  showLoading(false);
+}
+
+function parseCSVGoogle(csv, periodName) {
+  const lines = csv.split('\n').filter(l => l.trim());
+  const dataStart = 1; // skip header
+  const rows = [];
+  for (let i = dataStart; i < lines.length; i++) {
+    const cells = lines[i].split(',').map(c => c.replace(/^"|"$/g,'').trim());
+    if (!cells[0] || isNaN(parseFloat(cells[0]))) continue;
+    const r = { _period: periodName };
+    HEADERS_MAP.forEach((key, idx) => { r[key] = cells[idx] !== undefined ? cells[idx] : ''; });
+    rows.push(r);
+  }
+  return rows;
+}
+
+// ─── MANUAL PERIOD ───
+function addPeriodManual() {
+  const name = document.getElementById('periodName').value.trim();
+  const tsv = document.getElementById('tsvData').value.trim();
+  if (!name) { showAlert('addAlert','⚠️ Укажите название периода','error'); return; }
+  if (!tsv) { showAlert('addAlert','⚠️ Вставьте данные','error'); return; }
+
+  const rows = parseTSV(tsv, name);
+  if (!rows.length) { showAlert('addAlert','❌ Не удалось распознать данные. Проверьте формат.','error'); return; }
+
+  allPeriods[name] = { label: name, rows };
+  renderPeriodSelect();
+  renderPeriodsList();
+  refreshAll();
+  showAlert('addAlert', `✅ Добавлен период "${name}" — ${rows.length} сотрудников`, 'success');
+  document.getElementById('tsvData').value = '';
+}
+
+function deletePeriod(name) {
+  if (!confirm(`Удалить период "${name}"?`)) return;
+  delete allPeriods[name];
+  if (currentPeriod === name) currentPeriod = 'all';
+  renderPeriodSelect();
+  renderPeriodsList();
+  refreshAll();
+}
+
+// ─── RENDER ───
+function renderPeriodSelect() {
+  const sel = document.getElementById('periodSelect');
+  const current = sel.value;
+  sel.innerHTML = '<option value="all">Все периоды</option>';
+  Object.keys(allPeriods).forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k; opt.textContent = allPeriods[k].label;
+    sel.appendChild(opt);
+  });
+  sel.value = current in allPeriods ? current : 'all';
+}
+
+function renderPeriodsList() {
+  const el = document.getElementById('periodsList');
+  const keys = Object.keys(allPeriods);
+  if (!keys.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:30px 20px"><div class="empty-state-icon">📂</div><p>Нет загруженных периодов</p></div>';
+    return;
+  }
+  el.innerHTML = keys.map(k => `
+    <div class="period-item">
+      <div class="period-item-left">
+        <div class="period-dot"></div>
+        <div>
+          <div class="period-name">${allPeriods[k].label}</div>
+          <div class="period-count">${allPeriods[k].rows.length} сотрудников</div>
+        </div>
+      </div>
+      <div class="period-actions">
+        <button class="btn btn-danger" onclick="deletePeriod('${k}')">Удалить</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function refreshAll() {
+  renderOverview();
+  renderEmployees();
+  renderFines();
+  renderPerformance();
+}
+
+// ─── OVERVIEW ───
+function renderOverview() {
+  const rows = getRows();
+  const totalFOT = rows.reduce((s, r) => s + parseNum(r.salary), 0);
+  const totalFines = rows.reduce((s, r) => s + parseNum(r.fineTarif) + parseNum(r.finePenalty) - parseNum(r.returnPenalty), 0);
+  const totalPeaks = rows.reduce((s, r) => s + parseNum(r.peaks), 0);
+  const totalDays = rows.reduce((s, r) => s + parseNum(r.days), 0);
+
+  document.getElementById('ov-total').textContent = rows.length;
+  document.getElementById('ov-fot').textContent = fmt(totalFOT);
+  document.getElementById('ov-fines').textContent = fmt(totalFines);
+  document.getElementById('ov-peaks').textContent = totalDays > 0 ? fmtN(totalPeaks / rows.filter(r=>parseNum(r.days)>0).length, 0) : '—';
+
+  const sorted = [...rows].sort((a,b) => parseNum(b.salary) - parseNum(a.salary)).slice(0, 20);
+  document.getElementById('topCount').textContent = sorted.length + ' чел.';
+  document.getElementById('topTableBody').innerHTML = sorted.map((r, i) => `
+    <tr onclick="openEmployee('${r.id}','${r._period}')">
+      <td><span style="font-family:Unbounded;font-size:12px;color:var(--muted)">${i+1}</span></td>
+      <td class="td-name">${r.fio || '—'}<br><span class="td-id">${r.id}</span></td>
+      <td class="td-money green">${fmt(parseNum(r.salary))}</td>
+      <td class="td-money red">${fmt(parseNum(r.fineTarif)+parseNum(r.finePenalty)-parseNum(r.returnPenalty))}</td>
+      <td>${fmtN(parseNum(r.peaks),0)}</td>
+      <td>${r.days||0}</td>
+      <td>${fmtN(parseNum(r.hours),1)}</td>
+    </tr>
+  `).join('') || emptyRow(7);
+}
+
+// ─── EMPLOYEES ───
+function renderEmployees() {
+  const rows = getRows();
+  document.getElementById('empCount').textContent = rows.length + ' чел.';
+  document.getElementById('empTableBody').innerHTML = rows.map(r => `
+    <tr onclick="openEmployee('${r.id}','${r._period}')">
+      <td class="td-id">${r.id}</td>
+      <td class="td-name">${r.fio||'—'}</td>
+      <td><span class="badge badge-yellow">${r.warehouse||'—'}</span></td>
+      <td class="td-money green">${fmt(parseNum(r.salary))}</td>
+      <td>${fmt(parseNum(r.totalEarn))}</td>
+      <td class="td-money red">${fmt(parseNum(r.deductions))}</td>
+      <td>${fmtN(parseNum(r.peaks),0)}</td>
+      <td>${r.days||0}</td>
+      <td>${fmtN(parseNum(r.hours),1)}</td>
+    </tr>
+  `).join('') || emptyRow(9);
+}
+
+// ─── FINES ───
+function renderFines() {
+  const rows = getRows();
+  let totFT=0, totFP=0, totRP=0, totWR=0, totRW=0;
+  rows.forEach(r => {
+    totFT += parseNum(r.fineTarif);
+    totFP += parseNum(r.finePenalty);
+    totRP += parseNum(r.returnPenalty);
+    totWR += parseNum(r.writeOff);
+    totRW += parseNum(r.returnWrite);
+  });
+  const totFines = totFT + totFP;
+  const totReturns = totRP + totRW;
+  const netFines = totFines - totReturns;
+
+  document.getElementById('fn-total').textContent = fmt(totFines);
+  document.getElementById('fn-returns').textContent = fmt(totReturns);
+  document.getElementById('fn-net').textContent = fmt(netFines);
+
+  const fined = rows.filter(r => parseNum(r.fineTarif)+parseNum(r.finePenalty)+parseNum(r.writeOff) > 0);
+  document.getElementById('finesCount').textContent = fined.length + ' чел.';
+  document.getElementById('finesTableBody').innerHTML = fined.map(r => {
+    const ft = parseNum(r.fineTarif), fp = parseNum(r.finePenalty);
+    const rp = parseNum(r.returnPenalty), wr = parseNum(r.writeOff), rw = parseNum(r.returnWrite);
+    const net = ft+fp+wr-rp-rw;
+    return `<tr onclick="openEmployee('${r.id}','${r._period}')">
+      <td class="td-name">${r.fio||'—'}</td>
+      <td class="td-money red">${ft?fmt(ft):'—'}</td>
+      <td class="td-money red">${fp?fmt(fp):'—'}</td>
+      <td class="td-money green">${rp?fmt(rp):'—'}</td>
+      <td class="td-money red">${wr?fmt(wr):'—'}</td>
+      <td class="td-money green">${rw?fmt(rw):'—'}</td>
+      <td class="td-money ${net>0?'red':'green'}">${fmt(net)}</td>
+    </tr>`;
+  }).join('') || emptyRow(7);
+
+  // Detail tab — all fine types as rows
+  const detailRows = [];
+  rows.forEach(r => {
+    const fio = r.fio || r.id;
+    const period = r._period;
+    if (parseNum(r.fineTarif)) detailRows.push({fio, type:'Штраф тарифный', amount: parseNum(r.fineTarif), period, neg:true});
+    if (parseNum(r.finePenalty)) detailRows.push({fio, type:'Штраф penalty', amount: parseNum(r.finePenalty), period, neg:true});
+    if (parseNum(r.returnPenalty)) detailRows.push({fio, type:'Возврат штрафа', amount: parseNum(r.returnPenalty), period, neg:false});
+    if (parseNum(r.writeOff)) detailRows.push({fio, type:'Списание', amount: parseNum(r.writeOff), period, neg:true});
+    if (parseNum(r.returnWrite)) detailRows.push({fio, type:'Возврат списания', amount: parseNum(r.returnWrite), period, neg:false});
+  });
+  document.getElementById('finesDetailCount').textContent = detailRows.length + ' записей';
+  document.getElementById('finesDetailBody').innerHTML = detailRows.map(d => `
+    <tr>
+      <td class="td-name">${d.fio}</td>
+      <td><span class="badge ${d.neg?'badge-red':'badge-green'}">${d.type}</span></td>
+      <td class="td-money ${d.neg?'red':'green'}">${fmt(d.amount)}</td>
+      <td style="color:var(--muted);font-size:12px">${d.period}</td>
+    </tr>
+  `).join('') || emptyRow(4);
+}
+
+// ─── PERFORMANCE ───
+function renderPerformance() {
+  const rows = getRows();
+  const totPeaks = rows.reduce((s,r)=>s+parseNum(r.peaks),0);
+  const totDays = rows.reduce((s,r)=>s+parseNum(r.days),0);
+  const totHours = rows.reduce((s,r)=>s+parseNum(r.hours),0);
+  const avgShift = rows.filter(r=>parseNum(r.days)>0).reduce((s,r,_,a)=>s+parseNum(r.avgShift)/a.length,0);
+
+  document.getElementById('pf-peaks').textContent = fmtN(totPeaks,0);
+  document.getElementById('pf-days').textContent = fmtN(totDays,0);
+  document.getElementById('pf-hours').textContent = fmtN(totHours,1);
+  document.getElementById('pf-avgshift').textContent = fmtN(avgShift,2);
+
+  const sorted = [...rows].sort((a,b)=>parseNum(b.peaks)-parseNum(a.peaks));
+  document.getElementById('pfCount').textContent = sorted.length + ' чел.';
+  document.getElementById('pfTableBody').innerHTML = sorted.map(r => {
+    const pkPerHr = parseNum(r.hours) > 0 ? parseNum(r.peaks)/parseNum(r.hours) : 0;
+    return `<tr onclick="openEmployee('${r.id}','${r._period}')">
+      <td class="td-name">${r.fio||'—'}</td>
+      <td><b>${fmtN(parseNum(r.peaks),0)}</b></td>
+      <td>${r.days||0}</td>
+      <td>${fmtN(parseNum(r.hours),1)}</td>
+      <td><span class="badge ${pkPerHr>500?'badge-green':pkPerHr>300?'badge-yellow':'badge-red'}">${fmtN(pkPerHr,0)}</span></td>
+      <td>${fmtN(parseNum(r.avgShift),2)}</td>
+      <td style="color:var(--muted);font-size:12px">${r.lastPeakDate||'—'}</td>
+    </tr>`;
+  }).join('') || emptyRow(7);
+}
+
+// ─── EMPLOYEE MODAL ───
+function openEmployee(id, period) {
+  const rows = period && allPeriods[period] ? allPeriods[period].rows : getRows();
+  const r = rows.find(x => x.id == id);
+  if (!r) return;
+
+  document.getElementById('modalName').textContent = r.fio || '—';
+  document.getElementById('modalId').textContent = `ID: ${r.id} · ${r._period}`;
+
+  const netFines = parseNum(r.fineTarif)+parseNum(r.finePenalty)-parseNum(r.returnPenalty)+parseNum(r.writeOff)-parseNum(r.returnWrite);
+  document.getElementById('mdSalary').textContent = fmt(parseNum(r.salary));
+  document.getElementById('mdFines').textContent = fmt(netFines);
+  document.getElementById('mdPeaks').textContent = fmtN(parseNum(r.peaks),0);
+
+  document.getElementById('md-tariف').textContent = fmt(parseNum(r.tarif));
+  document.getElementById('md-total').textContent = fmt(parseNum(r.totalEarn));
+  document.getElementById('md-deductions').textContent = '−' + fmt(parseNum(r.deductions));
+  document.getElementById('md-bonus').textContent = '+' + fmt(parseNum(r.bonus10));
+  document.getElementById('md-salary-final').textContent = fmt(parseNum(r.salary));
+
+  document.getElementById('md-f1').textContent = parseNum(r.fineTarif) ? '−' + fmt(parseNum(r.fineTarif)) : '—';
+  document.getElementById('md-f2').textContent = parseNum(r.finePenalty) ? '−' + fmt(parseNum(r.finePenalty)) : '—';
+  document.getElementById('md-fr').textContent = parseNum(r.returnPenalty) ? '+' + fmt(parseNum(r.returnPenalty)) : '—';
+  document.getElementById('md-wr').textContent = parseNum(r.writeOff) ? '−' + fmt(parseNum(r.writeOff)) : '—';
+  document.getElementById('md-wrr').textContent = parseNum(r.returnWrite) ? '+' + fmt(parseNum(r.returnWrite)) : '—';
+
+  document.getElementById('md-days').textContent = r.days || '—';
+  document.getElementById('md-hours').textContent = fmtN(parseNum(r.hours),1) + ' ч';
+  document.getElementById('md-shift').textContent = fmtN(parseNum(r.avgShift),2) + ' ч';
+  document.getElementById('md-peaks2').textContent = fmtN(parseNum(r.peaks),0);
+  document.getElementById('md-warehouse').textContent = r.warehouse || '—';
+  document.getElementById('md-hire').textContent = r.hire || '—';
+
+  document.getElementById('empModal').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('empModal')) {
+    document.getElementById('empModal').classList.remove('open');
+  }
+}
+
+// ─── TABLE SORT ───
+function sortTable(tableId, colIdx) {
+  const key = tableId + '_' + colIdx;
+  const asc = sortState[key] !== 'asc';
+  sortState[key] = asc ? 'asc' : 'desc';
+
+  const table = document.getElementById(tableId);
+  const ths = table.querySelectorAll('th');
+  ths.forEach(th => th.classList.remove('sorted-asc','sorted-desc'));
+  ths[colIdx].classList.add(asc ? 'sorted-asc' : 'sorted-desc');
+
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  rows.sort((a,b) => {
+    const aVal = a.cells[colIdx]?.textContent.trim() || '';
+    const bVal = b.cells[colIdx]?.textContent.trim() || '';
+    const aNum = parseFloat(aVal.replace(/[^\d.-]/g,''));
+    const bNum = parseFloat(bVal.replace(/[^\d.-]/g,''));
+    if (!isNaN(aNum) && !isNaN(bNum)) return asc ? aNum-bNum : bNum-aNum;
+    return asc ? aVal.localeCompare(bVal,'ru') : bVal.localeCompare(aVal,'ru');
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+
+// ─── FINES TABS ───
+function switchFinesTab(tab, el) {
+  document.querySelectorAll('#finesTabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('finesTabSummary').style.display = tab==='summary'?'block':'none';
+  document.getElementById('finesTabDetail').style.display = tab==='detail'?'block':'none';
+}
+
+// ─── NAVIGATION ───
+const TITLES = { overview:'Обзор', employees:'Сотрудники', fines:'Штрафы и вычеты', performance:'Производительность', admin:'Администрирование' };
+function switchScreen(id, el) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('pageTitle').textContent = TITLES[id] || id;
+}
+
+function onPeriodChange() {
+  currentPeriod = document.getElementById('periodSelect').value;
+  refreshAll();
+}
+
+function onSearch() {
+  currentSearch = document.getElementById('searchInput').value;
+  refreshAll();
+}
+
+// ─── UTILS ───
+function emptyRow(cols) {
+  return `<tr><td colspan="${cols}" style="text-align:center;padding:40px;color:var(--muted)">
+    <div style="font-size:24px;margin-bottom:8px">🔍</div>
+    <div>Нет данных. Загрузите период в Админке.</div>
+  </td></tr>`;
+}
+
+function showAlert(id, msg, type) {
+  const el = document.getElementById(id);
+  el.className = `alert alert-${type} show`;
+  el.textContent = msg;
+  setTimeout(() => el.classList.remove('show'), 5000);
+}
+
+function showLoading(v) {
+  document.getElementById('loadingOverlay').classList[v?'add':'remove']('show');
+}
+
+// ─── INIT ───
+window.addEventListener('DOMContentLoaded', () => {
+  // Restore GS url if saved
+  const savedUrl = localStorage.getItem('wb_gs_url');
+  if (savedUrl) document.getElementById('gsUrl').value = savedUrl;
+  // Render empty state
+  refreshAll();
+});
+</script>
+</body>
+</html>
