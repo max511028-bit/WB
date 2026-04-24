@@ -1618,6 +1618,534 @@ function loadDemo(showMsg){
   if(showMsg)showAlert('addAlert','Демо-режим недоступен — данные загружаются с GitHub','ok');
 }
 
+
+// ═══════════════════════ MISSING FUNCTIONS ═══════════════════════
+
+// ── Period banner ──
+function updatePeriodBanner(){
+  const banner=document.getElementById('periodBanner');
+  const val=document.getElementById('periodBannerVal');
+  const city=document.getElementById('cityBannerVal');
+  if(!banner)return;
+  banner.style.display='flex';
+  if(val)val.textContent=curPeriod==='all'?'Все периоды':curPeriod;
+  if(city)city.textContent=curCity==='all'?'':' · '+curCity;
+}
+
+// ── Modal tabs ──
+function switchModalTab(id,el){
+  document.querySelectorAll('.modal-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.modal-tab-content').forEach(c=>c.classList.remove('active'));
+  if(el)el.classList.add('active');
+  const target=document.getElementById('mt'+id.charAt(0).toUpperCase()+id.slice(1));
+  if(target)target.classList.add('active');
+}
+
+// ── Period comparison ──
+function buildPeriodCompare(id){
+  const pKeys=Object.keys(periods);
+  if(pKeys.length<2)return'<div style="font-size:12px;color:var(--muted);padding:8px 0">Загрузите 2+ периода для сравнения</div>';
+  const rows=pKeys.map(pk=>{
+    const vRow=periods[pk].vyrab?.find(r=>r.id==id);
+    if(!vRow)return null;
+    const sal=Math.max(0,pn(vRow.netEarn))*RATE;
+    const fines=(periods[pk].fines||[]).filter(r=>r.id==id).reduce((s,r)=>s+pn(r.amount)-pn(r.ret),0);
+    const hrs=(periods[pk].ops||[]).filter(r=>r.id==id).reduce((s,r)=>s+pn(r.hours),0)||pn(vRow.hours);
+    const rph=hrs>0?sal/hrs:0;
+    return{period:pk,sal,fines,rph};
+  }).filter(Boolean);
+  if(rows.length<2)return'<div style="font-size:12px;color:var(--muted);padding:8px 0">Сотрудник только в одном периоде</div>';
+  return rows.map((r,i)=>{
+    const prev=rows[i-1];
+    const salDiff=prev?((r.sal-prev.sal)/Math.max(prev.sal,1)*100).toFixed(0):null;
+    const arrow=salDiff?`<span style="font-size:11px;color:${pn(salDiff)>=0?'var(--green)':'var(--red)'};margin-left:6px">${pn(salDiff)>=0?'▲':'▼'}${Math.abs(pn(salDiff))}%</span>`:'';
+    return`<div class="drow"><span class="drow-lbl" style="font-size:12px">${r.period}</span><span class="drow-val" style="font-size:12px">${fmt(r.sal)}${arrow} · ${fmt(r.rph)}/ч · штр. ${fmt(r.fines)}</span></div>`;
+  }).join('');
+}
+
+// ── Global search ──
+let gsSearchIdx=0;
+function openGSearch(){
+  document.getElementById('gsearchOverlay')?.classList.add('open');
+  setTimeout(()=>document.getElementById('gsearchInput')?.focus(),50);
+}
+function closeGSearch(e){
+  if(!e||e.target===document.getElementById('gsearchOverlay'))
+    document.getElementById('gsearchOverlay')?.classList.remove('open');
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')document.getElementById('gsearchOverlay')?.classList.remove('open');
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();openGSearch();}
+});
+function onGSearch(){
+  const q=document.getElementById('gsearchInput').value.toLowerCase().trim();
+  const res=document.getElementById('gsearchResults');
+  if(!q){res.innerHTML='<div class="gsearch-empty">Начните вводить имя сотрудника</div>';return;}
+  const all={};
+  Object.values(periods).forEach(p=>(p.vyrab||[]).forEach(r=>{if(!all[r.id])all[r.id]={r,fines:[],ops:[]};}));
+  Object.values(periods).forEach(p=>{
+    (p.fines||[]).forEach(f=>{if(all[f.id])all[f.id].fines.push(f);});
+    (p.ops||[]).forEach(o=>{if(all[o.id])all[o.id].ops.push(o);});
+  });
+  const matches=Object.values(all).filter(e=>(e.r.fio||'').toLowerCase().includes(q)).slice(0,12);
+  if(!matches.length){res.innerHTML='<div class="gsearch-empty">Ничего не найдено</div>';return;}
+  gsSearchIdx=0;
+  res.innerHTML=matches.map((e,i)=>{
+    const r=e.r;
+    const sal=Math.max(0,pn(r.netEarn))*RATE;
+    const fineNet=e.fines.reduce((s,f)=>s+pn(f.amount)-pn(f.ret),0);
+    const hrs=e.ops.reduce((s,o)=>s+pn(o.hours),0)||pn(r.hours);
+    const rph=hrs>0?sal/hrs:0;
+    const pph=hrs>0?(e.ops.reduce((s,o)=>s+pn(o.peaks),0)||pn(r.peaks))/hrs:0;
+    const fineShare=sal>0?fineNet/sal:0;
+    const sc=calcScore(rph,fineShare,pph,pn(r.days),r.hourly==='Да');
+    return`<div class="gsearch-result${i===0?' sel':''}" onclick="gsSelect('${r.id}','${r._period||''}')">
+      <div class="gsearch-score ${sc.cls}">${sc.grade}</div>
+      <div class="gsearch-meta">
+        <div class="gsearch-name">${r.fio||'—'}</div>
+        <div class="gsearch-sub">${r.wh||'—'} · ${r.days||0} дн.</div>
+      </div>
+      <div class="gsearch-sal">${fmt(sal)}</div>
+    </div>`;
+  }).join('');
+}
+function onGSearchKey(e){
+  const items=document.querySelectorAll('.gsearch-result');
+  if(e.key==='ArrowDown')gsSearchIdx=Math.min(gsSearchIdx+1,items.length-1);
+  else if(e.key==='ArrowUp')gsSearchIdx=Math.max(gsSearchIdx-1,0);
+  else if(e.key==='Enter'){items[gsSearchIdx]?.click();return;}
+  items.forEach((el,i)=>el.classList.toggle('sel',i===gsSearchIdx));
+  items[gsSearchIdx]?.scrollIntoView({block:'nearest'});
+}
+function gsSelect(id,period){
+  document.getElementById('gsearchOverlay')?.classList.remove('open');
+  const inp=document.getElementById('gsearchInput');
+  if(inp)inp.value='';
+  openEmp(id,period);
+}
+
+// ── Export all ──
+function exportAllXlsx(){
+  const v=getV(),fAll=getF(),oAll=getO();
+  const fMap={},oMap={};
+  fAll.forEach(r=>{if(!fMap[r.id])fMap[r.id]={tot:0};fMap[r.id].tot+=pn(r.amount)-pn(r.ret);});
+  oAll.forEach(r=>{if(!oMap[r.id])oMap[r.id]={hr:0,pk:0};oMap[r.id].hr+=pn(r.hours);oMap[r.id].pk+=pn(r.peaks);});
+  const rows=[['ФИО','ID','Склад','ЗП на руки','₽/час','Штрафы','Доля штрафов','Пиков','Часов','Дней','Тип','Рейтинг']];
+  v.forEach(r=>{
+    const sal=Math.max(0,pn(r.netEarn))*RATE;
+    const fm=fMap[r.id]||{tot:0};
+    const om=oMap[r.id]||{hr:0,pk:0};
+    const hrs=om.hr||pn(r.hours);
+    const rph=hrs>0?sal/hrs:0;
+    const pph=hrs>0?(om.pk||pn(r.peaks))/hrs:0;
+    const fineShare=sal>0?fm.tot/sal:0;
+    const sc=calcScore(rph,fineShare,pph,pn(r.days),r.hourly==='Да');
+    rows.push([r.fio,r.id,r.wh,sal.toFixed(2),rph.toFixed(2),fm.tot.toFixed(2),(fineShare*100).toFixed(1)+'%',(om.pk||pn(r.peaks)),hrs.toFixed(1),r.days,r.hourly==='Да'?'Почасовой':'Сдельный',sc.grade+' ('+sc.score+')']);
+  });
+  const csv=rows.map(r=>r.map(v=>{const sv=String(v==null?'':v);return sv.includes(',')||sv.includes('"')?`"${sv.replace(/"/g,'""')}"`:sv;}).join(',')).join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`Сотрудники_${curPeriod}.csv`;a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportEmpXlsx(){
+  const sub=document.getElementById('mSub')?.textContent||'';
+  const idM=sub.match(/ID: (\S+)/);
+  if(!idM)return;
+  const id=idM[1];
+  const name=document.getElementById('mName')?.textContent||id;
+  let vRow=null;
+  let fR=[],oR=[];
+  Object.values(periods).forEach(p=>{
+    const v=p.vyrab?.find(r=>r.id==id);
+    if(v&&!vRow)vRow=v;
+    fR=fR.concat((p.fines||[]).filter(r=>r.id==id));
+    oR=oR.concat((p.ops||[]).filter(r=>r.id==id));
+  });
+  const sal=Math.max(0,pn(vRow?.netEarn))*RATE;
+  const totalHrs=oR.reduce((s,r)=>s+pn(r.hours),0)||pn(vRow?.hours);
+  const rph=totalHrs>0?sal/totalHrs:0;
+  const rows=[['КАРТОЧКА СОТРУДНИКА'],[''],['ФИО',name],['ID',id],['Склад',vRow?.wh||'—'],['Дата найма',vRow?.hire||'—'],[''],
+    ['── ЗАРАБОТОК ──'],['Выработка по тарификатору',pn(vRow?.tarif)],['Общие вычеты',pn(vRow?.totalDed)],
+    ['Чистая выработка',pn(vRow?.netEarn)],['ЗП на руки (70%)',sal.toFixed(2)],[''],
+    ['── ПРОИЗВОДИТЕЛЬНОСТЬ ──'],['Дней',vRow?.days||0],['Часов',fmtN(totalHrs,2)],['₽/час',rph.toFixed(2)],[''],
+    ['── ШТРАФЫ ──'],['Дата','Причина','Тип','Сумма','Возврат']];
+  fR.sort((a,b)=>String(a.date).localeCompare(String(b.date))).forEach(r=>{
+    rows.push([r.date,r.reason,r.type,pn(r.amount),pn(r.ret)]);
+  });
+  rows.push([''],['── ОПЕРАЦИИ ──'],['Дата','Тип работ','Пиков','Часов','Выработка','₽/час']);
+  oR.sort((a,b)=>String(a.date).localeCompare(String(b.date))).forEach(r=>{
+    const rphRow=pn(r.hours)>0?(pn(r.earn)*RATE/pn(r.hours)).toFixed(2):0;
+    rows.push([r.date,r.opType,pn(r.peaks),pn(r.hours),pn(r.earn),rphRow]);
+  });
+  const csv=rows.map(r=>r.map(v=>{const sv=String(v==null?'':v);return sv.includes(',')||sv.includes('"')?`"${sv.replace(/"/g,'""')}"`:sv;}).join(',')).join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`Карточка_${name.replace(/ /g,'_')}.csv`;a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Quick filter employees ──
+let curEmpFilterLocal='all';
+function setEmpFilter(f,el){
+  curEmpFilter=f;
+  document.querySelectorAll('.qf-btn').forEach(b=>b.classList.remove('active'));
+  if(el)el.classList.add('active');
+  renderEmployees();
+}
+
+// ── Modal fine list with sort ──
+let modalFineSort='date';
+function sortModalFines(key){
+  modalFineSort=key;
+  const sub=document.getElementById('mSub')?.textContent||'';
+  const idM=sub.match(/ID: (\S+)/);
+  if(!idM)return;
+  const id=idM[1];
+  let fR=[];
+  Object.values(periods).forEach(p=>{fR=fR.concat((p.fines||[]).filter(r=>r.id==id));});
+  fR.sort((a,b)=>modalFineSort==='amount'?pn(b.amount)-pn(a.amount):String(b.date).localeCompare(String(a.date)));
+  renderFineList(id,fR);
+}
+function renderFineList(id,fR){
+  set('mm-flist',fR.length?`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Все штрафы (${fR.length})</div>
+      <div style="display:flex;gap:6px">
+        <button onclick="sortModalFines('date')" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:${modalFineSort==='date'?'var(--accent)':'var(--surface2)'};color:${modalFineSort==='date'?'#fff':'var(--muted)'}">По дате</button>
+        <button onclick="sortModalFines('amount')" style="padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:${modalFineSort==='amount'?'var(--accent)':'var(--surface2)'};color:${modalFineSort==='amount'?'#fff':'var(--muted)'}">По сумме</button>
+      </div>
+    </div>
+    ${fR.map(r=>`<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid rgba(37,42,58,.5);gap:8px">
+      <div style="flex:1;min-width:0"><div style="font-size:12px;line-height:1.4;word-break:break-word">${r.reason||'—'}</div>
+      <div style="color:var(--muted);font-size:11px;margin-top:2px">${r.date||''} · ${ftBadge(r.type)}${pn(r.ret)?` · <span style="color:var(--green)">возврат ${fmt(pn(r.ret))}</span>`:''}</div></div>
+      <div style="flex-shrink:0;color:var(--red);font-family:Unbounded;font-size:12px;font-weight:600">${fmt(pn(r.amount))}</div>
+    </div>`).join('')}`:'<div style="color:var(--muted);font-size:13px;padding:8px 0">Штрафов нет</div>');
+}
+
+function buildModalOps(oR){
+  const ot={};
+  oR.forEach(r=>{
+    if(!ot[r.opType])ot[r.opType]={pk:0,hr:0,er:0,days:new Set()};
+    ot[r.opType].pk+=pn(r.peaks);ot[r.opType].hr+=pn(r.hours);
+    ot[r.opType].er+=pn(r.earn);ot[r.opType].days.add(r.date);
+  });
+  const entries=Object.entries(ot).sort((a,b)=>b[1].pk-a[1].pk);
+  if(!entries.length)return'<div style="color:var(--muted);font-size:13px">Нет данных об операциях</div>';
+  let html=`<div style="font-size:11px;color:var(--muted);display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em"><span>Тип</span><span style="text-align:right">Пики</span><span style="text-align:right">Часов</span><span style="text-align:right">₽/час</span></div>`;
+  entries.forEach(([t,v])=>{
+    const rphNet=v.hr>0?(v.er/v.hr*RATE).toFixed(0):0;
+    const pph=v.hr>0?(v.pk/v.hr).toFixed(0):0;
+    const cfg=OP_CFG[t]||{color:'#6b7494'};
+    html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;align-items:center;padding:8px 2px;border-bottom:1px solid rgba(37,42,58,.5)">
+      <div>${opBadge(t)}<div style="font-size:10px;color:var(--muted);margin-top:3px">${v.days.size} дн.</div></div>
+      <div style="text-align:right;font-family:Unbounded;font-size:12px;font-weight:700;color:${cfg.color}">${fmtN(v.pk,0)}<div style="font-size:10px;font-family:Golos Text;color:var(--muted)">${pph} пик/ч</div></div>
+      <div style="text-align:right;font-size:13px">${fmtN(v.hr,1)}</div>
+      <div style="text-align:right;font-family:Unbounded;font-size:12px;font-weight:700;color:var(--green)">${fmt(pn(rphNet))}</div>
+    </div>`;
+  });
+  const byDay={};
+  oR.forEach(r=>{if(r.date&&r.opType){if(!byDay[r.date])byDay[r.date]=[];byDay[r.date].push(r);}});
+  const days=Object.keys(byDay).sort();
+  if(days.length){
+    html+=`<div style="margin-top:14px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">По дням</div>`;
+    days.forEach(d=>{
+      const dRows=byDay[d];
+      const dpk=dRows.reduce((s,r)=>s+pn(r.peaks),0);
+      const dhr=dRows.reduce((s,r)=>s+pn(r.hours),0);
+      const types=[...new Set(dRows.map(r=>r.opType))].map(t=>opBadge(t)).join(' ');
+      html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(37,42,58,.4);font-size:12px">
+        <div style="color:var(--muted)">${d}</div>
+        <div>${types}</div>
+        <div><span style="font-family:Unbounded;font-size:12px;color:var(--yellow)">${fmtN(dpk,0)}</span> пик · <span style="color:var(--blue)">${fmtN(dhr,1)}</span> ч</div>
+      </div>`;
+    });
+  }
+  return html;
+}
+
+// ── Chart tooltip ──
+function showChartTip(e,html){
+  const t=document.getElementById('chartTooltip');
+  if(!t)return;
+  t.innerHTML=html;t.style.display='block';
+  t.style.left=(e.clientX+12)+'px';t.style.top=(e.clientY-36)+'px';
+}
+function hideChartTip(){
+  const t=document.getElementById('chartTooltip');
+  if(t)t.style.display='none';
+}
+document.addEventListener('mousemove',e=>{
+  const t=document.getElementById('chartTooltip');
+  if(t&&t.style.display==='block'){t.style.left=(e.clientX+12)+'px';t.style.top=(e.clientY-36)+'px';}
+});
+
+// ── SVG Charts ──
+function svgBar(data,{width=700,height=240,barColor='#6c8fff',labelKey='date',valueKey='val',fmt2=v=>v,avgLine=true}={}){
+  if(!data.length)return'<div style="padding:30px;text-align:center;color:var(--muted)">Нет данных</div>';
+  const vals=data.map(d=>d[valueKey]);
+  const maxV=Math.max(...vals,1);
+  const avgV=vals.reduce((s,v)=>s+v,0)/vals.length;
+  const bw=Math.max(8,Math.min(44,Math.floor((width-60)/data.length)-3));
+  const chartW=Math.max(width,(bw+3)*data.length+60);
+  const h=height-60;
+  let bars='',labels='',grid='',avgEl='';
+  [0,0.25,0.5,0.75,1].forEach(p=>{
+    const gv=Math.round(maxV*p);
+    const y=30+h-(gv/maxV*h);
+    grid+=`<line x1="50" y1="${y}" x2="${chartW}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+    grid+=`<text x="44" y="${y+4}" text-anchor="end" fill="#6b7494" font-size="9">${gv>=1000?(gv/1000).toFixed(1)+'k':gv}</text>`;
+  });
+  if(avgLine&&avgV>0){
+    const ay=30+h-(avgV/maxV*h);
+    avgEl=`<line x1="50" y1="${ay}" x2="${chartW}" y2="${ay}" stroke="#6c8fff" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.6"/>
+    <text x="${chartW-4}" y="${ay-4}" text-anchor="end" fill="#6c8fff" font-size="9" font-weight="600">Ср: ${fmt2(avgV)}</text>`;
+  }
+  data.forEach((d,i)=>{
+    const bh=Math.max(2,(d[valueKey]/maxV)*h);
+    const x=50+i*(bw+3);
+    const y=30+h-bh;
+    const lbl=String(d[labelKey]).slice(-5);
+    bars+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="3" fill="${barColor}" opacity="0.82"
+      onmouseenter="showChartTip(event,'<b>${d[labelKey]}</b><br>${fmt2(d[valueKey])}')"
+      onmouseleave="hideChartTip()"
+      onmouseover="this.setAttribute('opacity','1')" onmouseout="this.setAttribute('opacity','0.82')" style="cursor:pointer"/>`;
+    if(bw>=16)bars+=`<text x="${x+bw/2}" y="${y-3}" text-anchor="middle" fill="#e8ecf5" font-size="8" opacity="0.7">${d[valueKey]>=1000?(d[valueKey]/1000).toFixed(1)+'k':Math.round(d[valueKey])}</text>`;
+    if(data.length<=40||i%Math.ceil(data.length/30)===0)
+      labels+=`<text x="${x+bw/2}" y="${30+h+14}" text-anchor="middle" fill="#6b7494" font-size="9" transform="rotate(-40,${x+bw/2},${30+h+14})">${lbl}</text>`;
+  });
+  return`<div class="chart-bar-wrap"><svg viewBox="0 0 ${chartW} ${height}" style="width:100%;min-width:${chartW}px;height:${height}px" xmlns="http://www.w3.org/2000/svg">${grid}${avgEl}${bars}${labels}</svg></div>`;
+}
+
+function svgMultiBar(data,series,{width=700,height=260,labelKey='date'}={}){
+  if(!data.length)return'<div style="padding:30px;text-align:center;color:var(--muted)">Нет данных</div>';
+  const avgs={};
+  series.forEach(s=>{const vals=data.map(d=>d[s.key]||0).filter(v=>v>0);avgs[s.key]=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0;});
+  const maxV=Math.max(...data.flatMap(d=>series.map(s=>d[s.key]||0)),1);
+  const bw=Math.max(6,Math.min(30,Math.floor((width-60)/data.length/series.length)-1));
+  const groupW=bw*series.length+4;
+  const chartW=Math.max(width,groupW*data.length+60);
+  const h=height-65;
+  let bars='',labels='',grid='',avgLines='',legend='';
+  [0,0.25,0.5,0.75,1].forEach(p=>{
+    const gv=Math.round(maxV*p);
+    const y=30+h-(gv/maxV*h);
+    grid+=`<line x1="50" y1="${y}" x2="${chartW}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+    grid+=`<text x="44" y="${y+4}" text-anchor="end" fill="#6b7494" font-size="9">${gv>=1000?(gv/1000).toFixed(1)+'k':gv}</text>`;
+  });
+  series.forEach((s,i)=>{
+    if(avgs[s.key]>0){const ay=30+h-(avgs[s.key]/maxV*h);avgLines+=`<line x1="50" y1="${ay}" x2="${chartW}" y2="${ay}" stroke="${s.color}" stroke-width="1" stroke-dasharray="5,3" opacity="0.5"/>`;}
+    const avgTxt=avgs[s.key]>0?` (ср: ${avgs[s.key]>=1000?(avgs[s.key]/1000).toFixed(1)+'k':Math.round(avgs[s.key])})`:'' ;
+    legend+=`<rect x="${55+i*120}" y="5" width="10" height="10" rx="2" fill="${s.color}"/>
+    <text x="${68+i*120}" y="14" fill="#9ca3af" font-size="10">${s.label}${avgTxt}</text>`;
+  });
+  data.forEach((d,i)=>{
+    const gx=50+i*groupW;
+    const tipParts=series.map(s=>`${s.label}: ${(d[s.key]||0)>=1000?((d[s.key]||0)/1000).toFixed(1)+'k':Math.round(d[s.key]||0)}`).join('<br>');
+    series.forEach((s,si)=>{
+      const v=d[s.key]||0;
+      const bh=Math.max(v>0?2:0,(v/maxV)*h);
+      const y=30+h-bh;
+      bars+=`<rect x="${gx+si*bw}" y="${y}" width="${bw-1}" height="${bh}" rx="2" fill="${s.color}" opacity="0.82"
+        onmouseenter="showChartTip(event,'<b>${d[labelKey]}</b><br>${tipParts}')"
+        onmouseleave="hideChartTip()"
+        onmouseover="this.setAttribute('opacity','1')" onmouseout="this.setAttribute('opacity','0.82')" style="cursor:pointer"/>`;
+    });
+    const lbl=String(d[labelKey]).slice(-5);
+    if(data.length<=40||i%Math.ceil(data.length/30)===0)
+      labels+=`<text x="${gx+groupW/2}" y="${30+h+14}" text-anchor="middle" fill="#6b7494" font-size="9" transform="rotate(-40,${gx+groupW/2},${30+h+14})">${lbl}</text>`;
+  });
+  return`<div class="chart-bar-wrap"><svg viewBox="0 0 ${chartW} ${height}" style="width:100%;min-width:${chartW}px;height:${height}px" xmlns="http://www.w3.org/2000/svg">${legend}${grid}${avgLines}${bars}${labels}</svg></div>`;
+}
+
+let curChartTab='daily';
+function chTab(id,el){
+  document.querySelectorAll('#chTabs .tab').forEach(t=>t.classList.remove('active'));
+  if(el)el.classList.add('active');
+  curChartTab=id;
+  ['Daily','Perf','Fines','Optypes'].forEach(k=>{
+    const el2=document.getElementById('ch'+k);
+    if(el2)el2.style.display=k.toLowerCase()===id?'block':'none';
+  });
+  renderCharts();
+}
+
+function renderCharts(){
+  const o=getO(),f=getF(),v=getV();
+  const daySet=new Set(o.map(r=>r.date).filter(Boolean));
+  const shiftsTotal=o.length;
+  const dayMap={};
+  o.forEach(r=>{if(r.date)dayMap[r.date]=(dayMap[r.date]||0)+1;});
+  const maxDay=Math.max(0,...Object.values(dayMap));
+  const avgDay=daySet.size>0?(shiftsTotal/daySet.size).toFixed(1):0;
+  set('ch-shifts',fmtN(shiftsTotal,0));set('ch-days',daySet.size);set('ch-maxday',maxDay);set('ch-avgday',avgDay);
+  // Employee cost
+  const empV={};v.forEach(r=>{empV[r.id]=r;});
+  const empO={};
+  o.forEach(r=>{if(!empO[r.id])empO[r.id]={id:r.id,fio:r.fio,hr:0,pk:0,er:0};empO[r.id].hr+=pn(r.hours);empO[r.id].pk+=pn(r.peaks);empO[r.id].er+=pn(r.earn);});
+  const empCostArr=Object.values(empO).map(e=>{
+    const vr=empV[e.id];const sal=Math.max(0,pn(vr?.netEarn||0))*RATE;
+    const rph=e.hr>0?(sal/e.hr).toFixed(0):0;const pph=e.hr>0?(e.pk/e.hr).toFixed(0):0;
+    return{...e,sal,rph:pn(rph),pph:pn(pph),wh:vr?.wh||'—'};
+  }).filter(e=>e.hr>0).sort((a,b)=>b.rph-a.rph);
+  const avgRph=empCostArr.length?empCostArr.reduce((s,e)=>s+e.rph,0)/empCostArr.length:0;
+  const medRph=empCostArr.length?empCostArr[Math.floor(empCostArr.length/2)].rph:0;
+  set('ch-emp-cnt',empCostArr.length+' чел.');
+  const empCostRows=empCostArr.map(e=>{
+    const rphDiff=medRph>0?((e.rph-medRph)/medRph*100).toFixed(0):0;
+    return`<tr onclick="openEmp('${e.id}','')"><td class="td-name" style="font-size:13px">${e.fio||'—'}</td>
+      <td>${fmtN(e.hr,1)}</td><td class="td-mono g">${fmt(e.sal)}</td>
+      <td class="td-mono" style="color:var(--accent)">${fmt(e.rph)}${rphDiff!=='0'?`<span style="font-size:10px;margin-left:4px;color:${pn(rphDiff)>0?'var(--green)':'var(--red)'}">${pn(rphDiff)>0?'+':''}${rphDiff}%</span>`:''}</td>
+      <td>${fmtN(e.pk,0)}</td><td><span class="badge ${e.pph>500?'b-green':e.pph>250?'b-yellow':'b-red'}">${fmtN(e.pph,0)}</span></td>
+      <td><span class="badge b-yellow" style="font-size:10px">${e.wh}</span></td></tr>`;
+  }).join('')||emptyRow(7);
+  const empAvgRow=empCostArr.length?`<tr style="background:rgba(108,143,255,.06);border-top:2px solid rgba(108,143,255,.2);font-weight:600">
+    <td style="font-size:11px;color:var(--accent)">≈ СРЕДНЕЕ / МЕДИАНА</td><td>—</td><td>—</td>
+    <td class="td-mono" style="color:var(--accent)">${fmt(avgRph)} / ${fmt(medRph)}</td><td>—</td><td>—</td><td>—</td></tr>`:'';
+  set('bEmpCost',empCostRows+empAvgRow);
+  // Cost by type
+  const tm={};
+  o.forEach(r=>{if(!r.opType)return;if(!tm[r.opType])tm[r.opType]={t:r.opType,er:0,hr:0,pk:0};tm[r.opType].er+=pn(r.earn);tm[r.opType].hr+=pn(r.hours);tm[r.opType].pk+=pn(r.peaks);});
+  const tArr=Object.values(tm).filter(t=>t.hr>0).sort((a,b)=>(b.er/b.hr)-(a.er/a.hr));
+  const medRphNet=tArr.reduce((s,t)=>s+t.hr,0)>0?(tArr.reduce((s,t)=>s+t.er,0)*RATE/tArr.reduce((s,t)=>s+t.hr,0)):0;
+  set('bCostHour',tArr.map(t=>{
+    const rph=(t.er/t.hr).toFixed(0),rphNet=(t.er/t.hr*RATE).toFixed(0),pph=(t.pk/t.hr).toFixed(0);
+    const cfg=OP_CFG[t.t]||{color:'#6b7494'};
+    const rphDiff=medRphNet>0?((pn(rphNet)-medRphNet)/medRphNet*100).toFixed(0):0;
+    return`<tr><td>${opBadge(t.t)}</td><td>${fmt(t.er)}</td><td>${fmtN(t.hr,1)}</td>
+      <td class="td-mono" style="color:${cfg.color}">${fmt(pn(rph))}</td>
+      <td class="td-mono g">${fmt(pn(rphNet))}${rphDiff!=='0'?`<span style="font-size:10px;margin-left:4px;color:${pn(rphDiff)>0?'var(--green)':'var(--red)'}">${pn(rphDiff)>0?'+':''}${rphDiff}%</span>`:''}</td>
+      <td>${fmtN(pn(pph),0)}</td></tr>`;
+  }).join('')||emptyRow(6));
+  if(curChartTab==='daily')renderChartDaily(o);
+  else if(curChartTab==='perf')renderChartPerf(o);
+  else if(curChartTab==='fines')renderChartFines(f);
+  else if(curChartTab==='optypes')renderChartOptypes(o);
+}
+
+function renderChartDaily(o){
+  const dm={};o.forEach(r=>{if(r.date)dm[r.date]=(dm[r.date]||new Set()).add(r.id);});
+  const data=Object.entries(dm).sort((a,b)=>a[0]<b[0]?-1:1).map(([date,s])=>({date,val:s.size}));
+  set('chartDailyWrap',svgBar(data,{barColor:'#6c8fff',valueKey:'val',fmt2:v=>v+' чел.'}));
+}
+function renderChartPerf(o){
+  const dm={};o.forEach(r=>{if(!r.date)return;if(!dm[r.date])dm[r.date]={date:r.date,peaks:0,hours:0};dm[r.date].peaks+=pn(r.peaks);dm[r.date].hours+=pn(r.hours);});
+  set('chartPerfWrap',svgMultiBar(Object.values(dm).sort((a,b)=>a.date<b.date?-1:1),[{key:'peaks',label:'Пики',color:'#fbbf24'},{key:'hours',label:'Часы',color:'#38bdf8'}],{labelKey:'date'}));
+}
+function renderChartFines(f){
+  const dm={};f.forEach(r=>{if(r.date)dm[r.date]=(dm[r.date]||0)+pn(r.amount)-pn(r.ret);});
+  set('chartFinesWrap',svgBar(Object.entries(dm).sort((a,b)=>a[0]<b[0]?-1:1).map(([date,val])=>({date,val:Math.max(0,val)})),{barColor:'#f87171',valueKey:'val',fmt2:v=>v.toFixed(0)+' ₽'}));
+}
+function renderChartOptypes(o){
+  const tm={};o.forEach(r=>{if(!r.opType||!r.date)return;if(!tm[r.opType])tm[r.opType]={};tm[r.opType][r.date]=(tm[r.opType][r.date]||0)+pn(r.peaks);});
+  const types=Object.keys(tm).filter(t=>t&&t!=='Часы').slice(0,5);
+  const allDates=[...new Set(o.map(r=>r.date).filter(Boolean))].sort();
+  const data=allDates.map(date=>{const d={date};types.forEach(t=>{d[t]=tm[t]?.[date]||0;});return d;});
+  const colors=['#38bdf8','#34d399','#fbbf24','#fb923c','#a78bfa'];
+  set('chartOptypesWrap',svgMultiBar(data,types.map((t,i)=>({key:t,label:t.substring(0,10),color:colors[i]||'#6b7494'})),{labelKey:'date'}));
+}
+
+// ── Risk zone ──
+function toggleRiskRow(id){document.getElementById('risk-expand-'+id)?.classList.toggle('open');}
+function setRiskType(type,el){
+  curRiskTypeFilter=type;
+  document.querySelectorAll('.qf-btn').forEach(b=>b.classList.remove('active'));
+  if(el)el.classList.add('active');
+  renderRisk();
+}
+
+function renderRisk(){
+  const v=getV(),fAll=getF(),oAll=getO();
+  const thresh=0.20;
+  const fMap={},oMap={};
+  fAll.forEach(r=>{if(!fMap[r.id])fMap[r.id]={tot:0,prod:0,home:0,cnt:0};const net=pn(r.amount)-pn(r.ret);fMap[r.id].tot+=net;fMap[r.id].cnt++;if(classifyFine(r.reason)==='work')fMap[r.id].prod+=net;else fMap[r.id].home+=net;});
+  oAll.forEach(r=>{if(!oMap[r.id])oMap[r.id]={hr:0,pk:0,er:0};oMap[r.id].hr+=pn(r.hours);oMap[r.id].pk+=pn(r.peaks);oMap[r.id].er+=pn(r.earn);});
+  const empData=v.map(r=>{
+    const sal=Math.max(0,pn(r.netEarn))*RATE;
+    const fm=fMap[r.id]||{tot:0,prod:0,home:0,cnt:0};
+    const om=oMap[r.id]||{hr:0,pk:0,er:0};
+    const hrs=om.hr||pn(r.hours);
+    const rph=hrs>0?sal/hrs:0,pph=hrs>0?om.pk/hrs:0;
+    const fineShare=sal>0?fm.tot/sal:0;
+    const isHourly=r.hourly==='Да';
+    const sc=calcScore(rph,fineShare,pph,pn(r.days),isHourly);
+    return{r,sal,fm,om,hrs,rph,pph,fineShare,isHourly,sc};
+  });
+  const rphVals=empData.filter(e=>e.rph>0).map(e=>e.rph).sort((a,b)=>a-b);
+  const medianRph=rphVals.length?rphVals[Math.floor(rphVals.length/2)]:0;
+  const withRisk=empData.map(e=>({...e,riskFines:e.fineShare>=thresh,riskLowRph:e.rph>0&&e.rph<medianRph*0.6&&!e.isHourly,riskHourly:e.isHourly&&pn(e.r.days)>0})).filter(e=>e.riskFines||e.riskLowRph||e.riskHourly);
+  set('risk-cnt-f',withRisk.filter(e=>e.sc.grade==='F').length);
+  set('risk-cnt-d',withRisk.filter(e=>e.sc.grade==='D').length);
+  set('risk-cnt-c',withRisk.filter(e=>e.sc.grade==='C').length);
+  set('risk-cnt',withRisk.length);
+  let filtered=withRisk;
+  if(curRiskGradeFilter==='F')filtered=filtered.filter(e=>e.sc.grade==='F');
+  else if(curRiskGradeFilter==='D')filtered=filtered.filter(e=>e.sc.grade==='D');
+  else if(curRiskGradeFilter==='C')filtered=filtered.filter(e=>e.sc.grade==='C');
+  if(curRiskTypeFilter==='fines')filtered=filtered.filter(e=>e.riskFines);
+  else if(curRiskTypeFilter==='lowrph')filtered=filtered.filter(e=>e.riskLowRph);
+  else if(curRiskTypeFilter==='hourly')filtered=filtered.filter(e=>e.riskHourly);
+  const sortKey=document.getElementById('riskSortSel')?.value||'score';
+  filtered.sort((a,b)=>{
+    if(sortKey==='score')return a.sc.score-b.sc.score;
+    if(sortKey==='fineShare')return b.fineShare-a.fineShare;
+    if(sortKey==='rph')return a.rph-b.rph;
+    if(sortKey==='sal')return b.sal-a.sal;
+    return a.sc.score-b.sc.score;
+  });
+  if(!filtered.length){set('riskCards','<div class="empty"><div class="empty-icon">✅</div><h4>Нет сотрудников</h4><p>По текущим фильтрам всё в порядке</p></div>');return;}
+  const tiers=[
+    {grade:'F',label:'Критично',color:'var(--red)',items:filtered.filter(e=>e.sc.grade==='F')},
+    {grade:'D',label:'Внимание',color:'var(--yellow)',items:filtered.filter(e=>e.sc.grade==='D')},
+    {grade:'C',label:'Следить',color:'var(--accent)',items:filtered.filter(e=>!['F','D'].includes(e.sc.grade))},
+  ].filter(t=>t.items.length);
+  set('riskCards',tiers.map(tier=>`
+    <div class="risk-tier">
+      <div class="risk-tier-header">
+        <div class="risk-tier-badge" style="color:${tier.color};background:rgba(108,143,255,.1)">${tier.grade}</div>
+        <span class="risk-tier-title" style="color:${tier.color}">${tier.label}</span>
+        <span class="risk-tier-cnt">${tier.items.length} чел.</span>
+      </div>
+      ${tier.items.map(e=>{
+        const tags=[];
+        if(e.riskFines)tags.push(`<span class="risk-tag-sm rt-fines">штрафы ${(e.fineShare*100).toFixed(0)}%</span>`);
+        if(e.riskLowRph)tags.push(`<span class="risk-tag-sm rt-low-rph">₽/час ${fmt(e.rph)}</span>`);
+        if(e.riskHourly)tags.push(`<span class="risk-tag-sm rt-hourly">почасовой</span>`);
+        const uid=e.r.id+'_r';
+        return`<div>
+          <div class="risk-row" onclick="toggleRiskRow('${uid}')">
+            <div class="score-badge ${e.sc.cls}" style="width:34px;height:34px;font-size:12px;flex-shrink:0">${e.sc.grade}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.r.fio||'—'}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+                <span>${e.r.wh||'—'}</span><span>·</span><span>${e.r.days||0} дн.</span>${tags.join('')}
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-family:Unbounded;font-size:13px;font-weight:700;color:var(--green)">${fmt(e.sal)}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">${e.rph>0?fmt(e.rph)+'/ч':'—'}</div>
+            </div>
+            <div style="color:var(--muted);font-size:12px;margin-left:8px">▾</div>
+          </div>
+          <div class="risk-row-expand" id="risk-expand-${uid}">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:12px">
+              <div class="mob-stat"><div class="mob-stat-lbl">ЗП на руки</div><div class="mob-stat-val" style="color:var(--green)">${fmt(e.sal)}</div></div>
+              <div class="mob-stat"><div class="mob-stat-lbl">₽/час</div><div class="mob-stat-val" style="color:var(--accent)">${e.rph>0?fmt(e.rph):'—'}</div></div>
+              ${e.fm.prod>0?`<div class="mob-stat" style="background:rgba(248,113,113,.08)"><div class="mob-stat-lbl" style="color:var(--red)">Произв. штрафы</div><div class="mob-stat-val" style="color:var(--red)">${fmt(e.fm.prod)}</div></div>`:''}
+              ${e.fm.home>0?`<div class="mob-stat"><div class="mob-stat-lbl">Буфет</div><div class="mob-stat-val" style="color:var(--muted)">${fmt(e.fm.home)}</div></div>`:''}
+              <div class="mob-stat"><div class="mob-stat-lbl">Рейтинг</div><div class="mob-stat-val">${e.sc.score}/100</div></div>
+            </div>
+            ${e.sc.reasons.length?`<div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">${e.sc.reasons.map(r=>'· '+r).join(' · ')}</div>`:''}
+            <button onclick="openEmp('${e.r.id}','${e.r._period||''}');event.stopPropagation()" style="padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--accent)">Открыть карточку →</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`).join(''));
+}
+
 // ═══════════════════════ INIT ═══════════════════════
 window.addEventListener('DOMContentLoaded',()=>{
   // Load data from GitHub
