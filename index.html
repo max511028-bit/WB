@@ -186,6 +186,20 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
 .risk-filter-btn{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .15s}
 .risk-filter-btn.active{background:rgba(248,113,113,.15);color:var(--red);border-color:rgba(248,113,113,.3)}
 .risk-filter-btn:hover:not(.active){color:var(--text)}
+/* TOOLTIP */
+.tip{position:relative;cursor:help}
+.tip:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1c2030;border:1px solid #252a3a;color:#e8ecf5;font-size:11.5px;line-height:1.6;padding:8px 12px;border-radius:10px;white-space:pre-line;min-width:200px;max-width:300px;z-index:9999;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.4);font-family:'Golos Text',sans-serif;font-weight:400}
+.tip:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#252a3a;z-index:9999}
+/* CHART INTERACTIVE */
+.chart-bar-wrap{position:relative}
+.chart-tooltip{position:fixed;background:#1c2030;border:1px solid #252a3a;color:#e8ecf5;font-size:12px;padding:8px 12px;border-radius:8px;pointer-events:none;z-index:9999;display:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+/* RISK SORT */
+.risk-sort-btn{padding:5px 12px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .15s}
+.risk-sort-btn.active{background:rgba(108,143,255,.15);color:var(--accent);border-color:rgba(108,143,255,.3)}
+.risk-sort-btn:hover:not(.active){color:var(--text)}
+/* AVG LINE */
+.avg-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(108,143,255,.12);color:var(--accent);border:1px solid rgba(108,143,255,.25)}
+
 /* FINE CATEGORY */
 .fcat-work{background:rgba(248,113,113,.15);color:#f87171;border:1px solid rgba(248,113,113,.3)}
 .fcat-home{background:rgba(107,116,148,.15);color:#9ca3af;border:1px solid rgba(107,116,148,.3)}
@@ -217,6 +231,7 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
   <div class="spinner"></div>
   <div style="font-size:13px;color:var(--muted)">Загрузка…</div>
 </div>
+<div class="chart-tooltip" id="chartTooltip"></div>
 
 <aside class="sidebar">
   <div class="logo">
@@ -282,7 +297,7 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
         <div class="table-header"><h3>Топ по заработку</h3><span class="table-count" id="ov-cnt">0</span></div>
         <div class="table-scroll">
           <table id="tOv"><thead><tr>
-            <th onclick="srt('tOv',0)">Рейтинг</th><th>#</th><th onclick="srt('tOv',2)">ФИО</th><th onclick="srt('tOv',3)">ЗП на руки</th>
+            <th onclick="srt('tOv',0)"><span class="tip" data-tip="Рейтинг эффективности A–F:&#10;&#10;A (80–100) — Отлично&#10;B (65–79)  — Хорошо&#10;C (50–64)  — Средне&#10;D (35–49)  — Слабо&#10;F (0–34)   — Проблема&#10;&#10;Считается из 3 факторов:&#10;• ₽/час на руки (40%)&#10;• Доля штрафов от ЗП (35%)&#10;• Пиков/час (25%)&#10;&#10;Почасовые: без учёта пиков">Рейтинг ℹ️</span></th><th>#</th><th onclick="srt('tOv',2)">ФИО</th><th onclick="srt('tOv',3)">ЗП на руки</th>
             <th onclick="srt('tOv',4)">₽/час</th><th onclick="srt('tOv',5)">Доля штрафов</th>
             <th onclick="srt('tOv',6)">Штрафы</th><th onclick="srt('tOv',7)">Дней</th>
           </tr></thead><tbody id="bOv"></tbody></table>
@@ -296,7 +311,7 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
         <div class="table-header"><h3>Все сотрудники</h3><span class="table-count" id="emp-cnt">0</span></div>
         <div class="table-scroll">
           <table id="tEmp"><thead><tr>
-            <th onclick="srt('tEmp',0)">Рейтинг</th><th onclick="srt('tEmp',1)">ФИО</th>
+            <th onclick="srt('tEmp',0)"><span class="tip" data-tip="Рейтинг эффективности A–F:&#10;&#10;A (80–100) — Отлично&#10;B (65–79)  — Хорошо&#10;C (50–64)  — Средне&#10;D (35–49)  — Слабо&#10;F (0–34)   — Проблема&#10;&#10;Считается из 3 факторов:&#10;• ₽/час на руки (40%)&#10;• Доля штрафов от ЗП (35%)&#10;• Пиков/час (25%)&#10;&#10;Почасовые: без учёта пиков">Рейтинг ℹ️</span></th><th onclick="srt('tEmp',1)">ФИО</th>
             <th onclick="srt('tEmp',2)">Склад</th><th onclick="srt('tEmp',3)">ЗП на руки</th>
             <th onclick="srt('tEmp',4)">₽/час</th><th onclick="srt('tEmp',5)">Доля штрафов</th>
             <th onclick="srt('tEmp',6)">Штрафы</th><th onclick="srt('tEmp',7)">Пиков</th><th onclick="srt('tEmp',8)">Дней</th><th onclick="srt('tEmp',9)">Тип</th>
@@ -325,10 +340,12 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
         <div class="table-card">
           <div class="table-header"><h3>Штрафы по сотрудникам</h3><span class="table-count" id="fn-emp-cnt">0</span></div>
           <div class="table-scroll"><table id="tFnS"><thead><tr>
-            <th onclick="srt('tFnS',0)">ФИО</th><th onclick="srt('tFnS',1)" title="Штрафы по тарификатору + penalty">Производств.</th>
-            <th onclick="srt('tFnS',2)" title="Буфет, личные покупки">Бытовые</th><th onclick="srt('tFnS',3)">Списания</th>
-            <th onclick="srt('tFnS',4)">Возвращено</th><th onclick="srt('tFnS',5)">Доля от ЗП</th>
-            <th onclick="srt('tFnS',6)">Кол-во</th><th onclick="srt('tFnS',7)">ИТОГО удержано</th>
+            <th onclick="srt('tFnS',0)">ФИО</th><th onclick="srt('tFnS',1)"><span class="tip" data-tip="Производственные штрафы:&#10;• Потери товара (потеряшки)&#10;• Не найдено при сдаче&#10;• Разделение ответственности&#10;• Штрафы по тарификатору WB">⚠️ Производств.</span></th>
+            <th onclick="srt('tFnS',2)"><span class="tip" data-tip="Бытовые штрафы (буфет):&#10;• Еда и напитки на складе&#10;• Кофе, чай, снеки&#10;• Личные покупки в буфете&#10;Не связаны с работой">🧃 Бытовые</span></th>
+            <th onclick="srt('tFnS',3)"><span class="tip" data-tip="Списания:&#10;• Спецодежда на сотрудника&#10;• Вещи без движения (SPS/WMI)&#10;• Списание по ненайденным&#10;товарам в коробке">📦 Списания</span></th>
+            <th onclick="srt('tFnS',4)"><span class="tip" data-tip="Возвраты:&#10;• WB вернул часть штрафа&#10;• Разделение ответственности&#10;• Оспоренные штрафы&#10;Показана сумма, которую&#10;вернули сотруднику">↩️ Возвращено</span></th>
+            <th onclick="srt('tFnS',5)"><span class="tip" data-tip="Доля штрафов от ЗП:&#10;(Штрафы − Возвраты) / ЗП на руки&#10;&#10;Норма: &lt;10% 🟢&#10;Внимание: 10–20% 🟡&#10;Риск: &gt;20% 🔴">% от ЗП</span></th>
+            <th onclick="srt('tFnS',6)">Кол-во</th><th onclick="srt('tFnS',7)">ИТОГО</th>
           </tr></thead><tbody id="bFnS"></tbody></table></div>
         </div>
       </div>
@@ -500,6 +517,13 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
         </div>
       </div>
 
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <span style="font-size:12px;color:var(--muted)">Сортировать:</span>
+        <button class="risk-sort-btn active" onclick="setRiskSort('score',this)">По рейтингу</button>
+        <button class="risk-sort-btn" onclick="setRiskSort('fineShare',this)">По доле штрафов</button>
+        <button class="risk-sort-btn" onclick="setRiskSort('rph',this)">По ₽/час</button>
+        <button class="risk-sort-btn" onclick="setRiskSort('sal',this)">По ЗП</button>
+      </div>
       <div id="riskCards"></div>
     </div>
 
@@ -1005,6 +1029,20 @@ function renderOps(){
     em[r.id].typeHr[r.opType]=(em[r.id].typeHr[r.opType]||0)+pn(r.hours);
   });
   const ea=Object.values(em).sort((a,b)=>b.pk-a.pk);
+  // Compute averages for ops employees
+  const validEa=ea.filter(e=>e.hr>0);
+  const avgRphEa=validEa.length?validEa.reduce((s,e)=>s+pn(e.hr>0?(e.er*RATE/e.hr):0),0)/validEa.length:0;
+  const avgPphEa=validEa.length?validEa.reduce((s,e)=>s+pn(e.hr>0?(e.pk/e.hr):0),0)/validEa.length:0;
+  const avgPkEa=ea.length?ea.reduce((s,e)=>s+e.pk,0)/ea.length:0;
+  const avgHintHtml=validEa.length?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+    <span class="avg-badge">Ср. ₽/час: ${fmt(avgRphEa)}</span>
+    <span class="avg-badge">Ср. пиков/час: ${fmtN(avgPphEa,0)}</span>
+    <span class="avg-badge">Ср. пиков: ${fmtN(avgPkEa,0)}</span>
+  </div>`:'';
+  const opEmpEl=document.getElementById('oE');
+  let avgHintEl=opEmpEl?.querySelector('.op-avg-hint');
+  if(!avgHintEl&&opEmpEl){avgHintEl=document.createElement('div');avgHintEl.className='op-avg-hint';const tc=opEmpEl.querySelector('.table-card');if(tc)opEmpEl.insertBefore(avgHintEl,tc);}
+  if(avgHintEl)avgHintEl.innerHTML=avgHintHtml;
   set('op-emp-cnt',ea.length+' чел.');
   set('bOE',ea.map(e=>{
     const pph=e.hr>0?(e.pk/e.hr).toFixed(0):0;
@@ -1023,17 +1061,36 @@ function renderOps(){
     </tr>`;
   }).join('')||emptyRow(7));
 
-  // By type — add ₽/hour
-  set('bOT',ta.map(t=>{
+  // By type — add ₽/hour + average footer
+  const totalHrAll=ta.reduce((s,t)=>s+t.hr,0);
+  const totalErAll=ta.reduce((s,t)=>s+t.er,0);
+  const totalPkAll=ta.reduce((s,t)=>s+t.pk,0);
+  const avgRphAll=totalHrAll>0?(totalErAll*RATE/totalHrAll).toFixed(0):0;
+  const avgPphAll=totalHrAll>0?(totalPkAll/totalHrAll).toFixed(0):0;
+  const typeRows=ta.map(t=>{
     const pph=t.hr>0?(t.pk/t.hr).toFixed(0):0;
     const rph=t.hr>0?(t.er*RATE/t.hr).toFixed(0):0;
+    const pphDiff=avgPphAll>0?((pn(pph)-pn(avgPphAll))/pn(avgPphAll)*100).toFixed(0):0;
+    const rphDiff=avgRphAll>0?((pn(rph)-pn(avgRphAll))/pn(avgRphAll)*100).toFixed(0):0;
     return`<tr><td>${opBadge(t.t)}</td><td>${t.emps.size}</td><td style="color:var(--muted)">${t.cnt}</td>
       <td class="td-mono y">${fmtN(t.pk,0)}</td><td>${fmtN(t.hr,1)}</td>
-      <td><span class="badge ${pn(pph)>500?'b-green':pn(pph)>250?'b-yellow':'b-red'}">${pph}</span></td>
-      <td class="td-mono" style="color:var(--accent)">${fmt(pn(rph))}/ч</td>
+      <td><span class="badge ${pn(pph)>500?'b-green':pn(pph)>250?'b-yellow':'b-red'}">${pph}</span>
+        ${pphDiff!=='0'?`<span style="font-size:10px;color:${pn(pphDiff)>0?'var(--green)':'var(--red)'}">${pn(pphDiff)>0?'+':''}${pphDiff}%</span>`:''}</td>
+      <td class="td-mono" style="color:var(--accent)">${fmt(pn(rph))}/ч
+        ${rphDiff!=='0'?`<div style="font-size:10px;color:${pn(rphDiff)>0?'var(--green)':'var(--red)'}">${pn(rphDiff)>0?'+':''}${rphDiff}% к ср</div>`:''}</td>
       <td>${fmt(t.er)}</td>
     </tr>`;
-  }).join('')||emptyRow(8));
+  }).join('')||emptyRow(8);
+  const avgFooter=ta.length?`<tr style="background:rgba(108,143,255,.06);font-weight:600;border-top:2px solid rgba(108,143,255,.2)">
+    <td style="font-size:11px;color:var(--accent)">≈ СРЕДНЕЕ</td>
+    <td>—</td><td style="color:var(--muted)">—</td>
+    <td class="td-mono y">${fmtN(totalPkAll/ta.length,0)}</td>
+    <td>${fmtN(totalHrAll/ta.length,1)}</td>
+    <td><span class="badge b-blue">${avgPphAll} пик/ч</span></td>
+    <td class="td-mono" style="color:var(--accent)">${fmt(pn(avgRphAll))}/ч</td>
+    <td>${fmt(totalErAll/ta.length)}</td>
+  </tr>`:'';
+  set('bOT',typeRows+avgFooter);
 
   // Detail (apply type filter)
   const oDet=curType==='all'?oAll:oAll.filter(r=>r.opType===curType);
@@ -1361,15 +1418,27 @@ function renderCharts(){
   }).filter(e=>e.hr>0).sort((a,b)=>b.rph-a.rph);
 
   set('ch-emp-cnt',empCostArr.length+' чел.');
-  set('bEmpCost',empCostArr.map(e=>`<tr onclick="openEmp('${e.id}','')">
-    <td class="td-name" style="font-size:13px">${e.fio||'—'}</td>
-    <td>${fmtN(e.hr,1)}</td>
-    <td class="td-mono g">${fmt(e.sal)}</td>
-    <td class="td-mono" style="color:var(--accent)">${fmt(e.rph)}</td>
-    <td>${fmtN(e.pk,0)}</td>
-    <td><span class="badge ${e.pph>500?'b-green':e.pph>250?'b-yellow':'b-red'}">${fmtN(e.pph,0)}</span></td>
-    <td><span class="badge b-yellow" style="font-size:10px">${e.wh}</span></td>
-  </tr>`).join('')||emptyRow(7));
+  const avgRph=empCostArr.length?empCostArr.reduce((s,e)=>s+e.rph,0)/empCostArr.length:0;
+  const medRph=empCostArr.length?empCostArr[Math.floor(empCostArr.length/2)].rph:0;
+  const empCostRows=empCostArr.map(e=>{
+    const rphDiff=medRph>0?((e.rph-medRph)/medRph*100).toFixed(0):0;
+    return`<tr onclick="openEmp('${e.id}','')">
+      <td class="td-name" style="font-size:13px">${e.fio||'—'}</td>
+      <td>${fmtN(e.hr,1)}</td>
+      <td class="td-mono g">${fmt(e.sal)}</td>
+      <td class="td-mono" style="color:var(--accent)">${fmt(e.rph)}${rphDiff!=='0'?`<span style="font-size:10px;margin-left:4px;color:${pn(rphDiff)>0?'var(--green)':'var(--red)'}">${pn(rphDiff)>0?'+':''}${rphDiff}%</span>`:''}</td>
+      <td>${fmtN(e.pk,0)}</td>
+      <td><span class="badge ${e.pph>500?'b-green':e.pph>250?'b-yellow':'b-red'}">${fmtN(e.pph,0)}</span></td>
+      <td><span class="badge b-yellow" style="font-size:10px">${e.wh}</span></td>
+    </tr>`;
+  }).join('')||emptyRow(7);
+  const empAvgRow=empCostArr.length?`<tr style="background:rgba(108,143,255,.06);border-top:2px solid rgba(108,143,255,.2);font-weight:600">
+    <td style="font-size:11px;color:var(--accent)">≈ СРЕДНЕЕ / МЕДИАНА</td>
+    <td>—</td><td>—</td>
+    <td class="td-mono" style="color:var(--accent)">${fmt(avgRph)} / ${fmt(medRph)}</td>
+    <td>—</td><td>—</td><td>—</td>
+  </tr>`:'';
+  set('bEmpCost',empCostRows+empAvgRow);
 
   // Cost by op type
   const tm={};
@@ -1379,19 +1448,32 @@ function renderCharts(){
     tm[r.opType].er+=pn(r.earn);tm[r.opType].hr+=pn(r.hours);tm[r.opType].pk+=pn(r.peaks);
   });
   const tArr=Object.values(tm).filter(t=>t.hr>0).sort((a,b)=>(b.er/b.hr)-(a.er/a.hr));
-  set('bCostHour',tArr.map(t=>{
+  const totHrTypes=tArr.reduce((s,t)=>s+t.hr,0);
+  const totErTypes=tArr.reduce((s,t)=>s+t.er,0);
+  const totPkTypes=tArr.reduce((s,t)=>s+t.pk,0);
+  const medRphNet=totHrTypes>0?(totErTypes*RATE/totHrTypes):0;
+
+  const typeHtml=tArr.map(t=>{
     const rph=(t.er/t.hr).toFixed(0);
     const rphNet=(t.er/t.hr*RATE).toFixed(0);
     const pph=(t.pk/t.hr).toFixed(0);
     const cfg=OP_CFG[t.t]||{color:'#6b7494'};
+    const rphDiff=medRphNet>0?((pn(rphNet)-medRphNet)/medRphNet*100).toFixed(0):0;
     return`<tr>
       <td>${opBadge(t.t)}</td>
       <td>${fmt(t.er)}</td><td>${fmtN(t.hr,1)}</td>
       <td class="td-mono" style="color:${cfg.color}">${fmt(pn(rph))}</td>
-      <td class="td-mono g">${fmt(pn(rphNet))}</td>
+      <td class="td-mono g">${fmt(pn(rphNet))}${rphDiff!=='0'?`<span style="font-size:10px;margin-left:4px;color:${pn(rphDiff)>0?'var(--green)':'var(--red)'}">${pn(rphDiff)>0?'+':''}${rphDiff}%</span>`:''}</td>
       <td>${fmtN(pn(pph),0)}</td>
     </tr>`;
-  }).join('')||emptyRow(6));
+  }).join('')||emptyRow(6);
+  const avgTypeRow=tArr.length?`<tr style="background:rgba(108,143,255,.06);border-top:2px solid rgba(108,143,255,.2);font-weight:600">
+    <td style="font-size:11px;color:var(--accent)">≈ СРЕДНЕЕ</td>
+    <td>${fmt(totErTypes/tArr.length)}</td><td>${fmtN(totHrTypes/tArr.length,1)}</td>
+    <td>—</td><td class="td-mono" style="color:var(--accent)">${fmt(medRphNet)}</td>
+    <td>${fmtN(totPkTypes/tArr.length,0)}</td>
+  </tr>`:'';
+  set('bCostHour',typeHtml+avgTypeRow);
 
   if(curChartTab==='daily') renderChartDaily(o);
   else if(curChartTab==='perf') renderChartPerf(o);
@@ -1399,73 +1481,121 @@ function renderCharts(){
   else if(curChartTab==='optypes') renderChartOptypes(o);
 }
 
-function svgBar(data, {width=700,height=220,barColor='#6c8fff',labelKey='date',valueKey='val',fmt2=v=>v,title=''}={}){
+// Chart tooltip helpers
+function showChartTip(e,html){
+  const t=document.getElementById('chartTooltip');
+  if(!t)return;
+  t.innerHTML=html;t.style.display='block';
+  t.style.left=(e.clientX+12)+'px';t.style.top=(e.clientY-36)+'px';
+}
+function hideChartTip(){const t=document.getElementById('chartTooltip');if(t)t.style.display='none';}
+document.addEventListener('mousemove',e=>{
+  const t=document.getElementById('chartTooltip');
+  if(t&&t.style.display==='block'){t.style.left=(e.clientX+12)+'px';t.style.top=(e.clientY-36)+'px';}
+});
+
+function svgBar(data, {width=700,height=240,barColor='#6c8fff',labelKey='date',valueKey='val',fmt2=v=>v,avgLine=true,avgLabel='Среднее',unit=''}={}){
   if(!data.length)return'<div style="padding:30px;text-align:center;color:var(--muted)">Нет данных для графика</div>';
-  const maxV=Math.max(...data.map(d=>d[valueKey]),1);
-  const bw=Math.max(8,Math.min(40,Math.floor((width-60)/data.length)-3));
+  const vals=data.map(d=>d[valueKey]);
+  const maxV=Math.max(...vals,1);
+  const avgV=vals.reduce((s,v)=>s+v,0)/vals.length;
+  const bw=Math.max(8,Math.min(44,Math.floor((width-60)/data.length)-3));
   const chartW=Math.max(width,(bw+3)*data.length+60);
-  const h=height-50; // bar area height
-  let bars='',labels='',gridLines='';
+  const h=height-60;
+  let bars='',labels='',gridLines='',avgEl='';
   const gridVals=[0,0.25,0.5,0.75,1].map(p=>Math.round(maxV*p));
   gridVals.forEach(gv=>{
     const y=30+h-(gv/maxV*h);
-    gridLines+=`<line x1="50" y1="${y}" x2="${chartW}" y2="${y}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>`;
-    gridLines+=`<text x="44" y="${y+4}" text-anchor="end" fill="#6b7494" font-size="9">${gv>=1000?(gv/1000).toFixed(0)+'k':gv}</text>`;
+    gridLines+=`<line x1="50" y1="${y}" x2="${chartW}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+    gridLines+=`<text x="44" y="${y+4}" text-anchor="end" fill="#6b7494" font-size="9">${gv>=1000?(gv/1000).toFixed(1)+'k':gv}</text>`;
   });
+  // Average line
+  if(avgLine&&avgV>0){
+    const ay=30+h-(avgV/maxV*h);
+    avgEl=`<line x1="50" y1="${ay}" x2="${chartW}" y2="${ay}" stroke="#6c8fff" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.6"/>
+    <text x="${chartW-4}" y="${ay-4}" text-anchor="end" fill="#6c8fff" font-size="9" font-weight="600">Ср: ${fmt2(avgV)}</text>`;
+  }
   data.forEach((d,i)=>{
     const bh=Math.max(2,(d[valueKey]/maxV)*h);
     const x=50+i*(bw+3);
     const y=30+h-bh;
-    const lbl=String(d[labelKey]).slice(-5); // last 5 chars (dd.mm)
-    bars+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="3" fill="${barColor}" opacity="0.85">
-      <title>${d[labelKey]}: ${fmt2(d[valueKey])}</title>
-    </rect>`;
+    const lbl=String(d[labelKey]).slice(-5);
+    const tipId=`bar_${i}`;
+    bars+=`<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="3" fill="${barColor}" opacity="0.82"
+      onmouseenter="showChartTip(event,'<b>${d[labelKey]}</b><br>${fmt2(d[valueKey])}${unit}')"
+      onmouseleave="hideChartTip()"
+      style="cursor:pointer;transition:opacity .1s" 
+      onmouseover="this.setAttribute('opacity','1')"
+      onmouseout="this.setAttribute('opacity','0.82')"/>`;
+    // Value label on bar if bar wide enough
+    if(bw>=16){
+      bars+=`<text x="${x+bw/2}" y="${y-3}" text-anchor="middle" fill="#e8ecf5" font-size="8" opacity="0.7">${d[valueKey]>=1000?(d[valueKey]/1000).toFixed(1)+'k':Math.round(d[valueKey])}</text>`;
+    }
     if(data.length<=40||i%Math.ceil(data.length/30)===0){
-      labels+=`<text x="${x+bw/2}" y="${30+h+14}" text-anchor="middle" fill="#6b7494" font-size="9" transform="rotate(-45,${x+bw/2},${30+h+14})">${lbl}</text>`;
+      labels+=`<text x="${x+bw/2}" y="${30+h+14}" text-anchor="middle" fill="#6b7494" font-size="9" transform="rotate(-40,${x+bw/2},${30+h+14})">${lbl}</text>`;
     }
   });
-  return`<svg viewBox="0 0 ${chartW} ${height}" style="width:100%;min-width:${chartW}px;height:${height}px" xmlns="http://www.w3.org/2000/svg">
-    ${gridLines}${bars}${labels}
-  </svg>`;
+  return`<div class="chart-bar-wrap"><svg viewBox="0 0 ${chartW} ${height}" style="width:100%;min-width:${chartW}px;height:${height}px" xmlns="http://www.w3.org/2000/svg">
+    ${gridLines}${avgEl}${bars}${labels}
+  </svg></div>`;
 }
 
-function svgMultiBar(data, series, {width=700,height=240,labelKey='date'}={}){
+function svgMultiBar(data, series, {width=700,height=260,labelKey='date'}={}){
   if(!data.length)return'<div style="padding:30px;text-align:center;color:var(--muted)">Нет данных</div>';
+  // Compute averages per series
+  const avgs={};
+  series.forEach(s=>{
+    const vals=data.map(d=>d[s.key]||0).filter(v=>v>0);
+    avgs[s.key]=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0;
+  });
   const maxV=Math.max(...data.flatMap(d=>series.map(s=>d[s.key]||0)),1);
   const bw=Math.max(6,Math.min(30,Math.floor((width-60)/data.length/series.length)-1));
   const groupW=bw*series.length+4;
   const chartW=Math.max(width,groupW*data.length+60);
-  const h=height-55;
-  let bars='',labels='',grid='';
-  [0,0.5,1].forEach(p=>{
+  const h=height-65;
+  let bars='',labels='',grid='',avgLines='';
+  [0,0.25,0.5,0.75,1].forEach(p=>{
     const gv=Math.round(maxV*p);
     const y=30+h-(gv/maxV*h);
-    grid+=`<line x1="50" y1="${y}" x2="${chartW}" y2="${y}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>`;
+    grid+=`<line x1="50" y1="${y}" x2="${chartW}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
     grid+=`<text x="44" y="${y+4}" text-anchor="end" fill="#6b7494" font-size="9">${gv>=1000?(gv/1000).toFixed(1)+'k':gv}</text>`;
+  });
+  // Average lines per series
+  series.forEach((s,si)=>{
+    if(avgs[s.key]>0){
+      const ay=30+h-(avgs[s.key]/maxV*h);
+      avgLines+=`<line x1="50" y1="${ay}" x2="${chartW}" y2="${ay}" stroke="${s.color}" stroke-width="1" stroke-dasharray="5,3" opacity="0.5"/>`;
+    }
   });
   // Legend
   let legend='';
   series.forEach((s,i)=>{
-    legend+=`<rect x="${55+i*90}" y="5" width="10" height="10" rx="2" fill="${s.color}"/>
-    <text x="${68+i*90}" y="14" fill="#9ca3af" font-size="10">${s.label}</text>`;
+    const avgTxt=avgs[s.key]>0?` (ср: ${avgs[s.key]>=1000?(avgs[s.key]/1000).toFixed(1)+'k':Math.round(avgs[s.key])})`:''  ;
+    legend+=`<rect x="${55+i*120}" y="5" width="10" height="10" rx="2" fill="${s.color}"/>
+    <text x="${68+i*120}" y="14" fill="#9ca3af" font-size="10">${s.label}${avgTxt}</text>`;
   });
   data.forEach((d,i)=>{
     const gx=50+i*groupW;
+    // Build tooltip content for this group
+    const tipParts=series.map(s=>`${s.label}: ${(d[s.key]||0)>=1000?((d[s.key]||0)/1000).toFixed(1)+'k':Math.round(d[s.key]||0)}`).join('<br>');
     series.forEach((s,si)=>{
       const v=d[s.key]||0;
       const bh=Math.max(v>0?2:0,(v/maxV)*h);
       const y=30+h-bh;
-      bars+=`<rect x="${gx+si*bw}" y="${y}" width="${bw-1}" height="${bh}" rx="2" fill="${s.color}" opacity="0.85">
-        <title>${d[labelKey]} ${s.label}: ${v}</title></rect>`;
+      bars+=`<rect x="${gx+si*bw}" y="${y}" width="${bw-1}" height="${bh}" rx="2" fill="${s.color}" opacity="0.82"
+        onmouseenter="showChartTip(event,'<b>${d[labelKey]}</b><br>${tipParts}')"
+        onmouseleave="hideChartTip()"
+        onmouseover="this.setAttribute('opacity','1')" onmouseout="this.setAttribute('opacity','0.82')"
+        style="cursor:pointer"/>`;
     });
     const lbl=String(d[labelKey]).slice(-5);
     if(data.length<=40||i%Math.ceil(data.length/30)===0){
-      labels+=`<text x="${gx+groupW/2}" y="${30+h+14}" text-anchor="middle" fill="#6b7494" font-size="9" transform="rotate(-45,${gx+groupW/2},${30+h+14})">${lbl}</text>`;
+      labels+=`<text x="${gx+groupW/2}" y="${30+h+14}" text-anchor="middle" fill="#6b7494" font-size="9" transform="rotate(-40,${gx+groupW/2},${30+h+14})">${lbl}</text>`;
     }
   });
-  return`<svg viewBox="0 0 ${chartW} ${height}" style="width:100%;min-width:${chartW}px;height:${height}px" xmlns="http://www.w3.org/2000/svg">
-    ${legend}${grid}${bars}${labels}
-  </svg>`;
+  return`<div class="chart-bar-wrap"><svg viewBox="0 0 ${chartW} ${height}" style="width:100%;min-width:${chartW}px;height:${height}px" xmlns="http://www.w3.org/2000/svg">
+    ${legend}${grid}${avgLines}${bars}${labels}
+  </svg></div>`;
 }
 
 function renderChartDaily(o){
@@ -1684,10 +1814,16 @@ function exportEmpXlsx(){
 
 
 // ═══════════════════════ RISK ZONE ═══════════════════════
-let curRiskFilter='all';
+let curRiskFilter='all', curRiskSort='score';
 function setRiskFilter(f,el){
   curRiskFilter=f;
   document.querySelectorAll('.risk-filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderRisk();
+}
+function setRiskSort(s,el){
+  curRiskSort=s;
+  document.querySelectorAll('.risk-sort-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   renderRisk();
 }
@@ -1745,7 +1881,13 @@ function renderRisk(){
     if(curRiskFilter==='lowrph') return e.riskLowRph;
     if(curRiskFilter==='hourly') return e.riskHourly;
     return true;
-  }).sort((a,b)=>a.sc.score-b.sc.score);
+  }).sort((a,b)=>{
+    if(curRiskSort==='score') return a.sc.score-b.sc.score;
+    if(curRiskSort==='fineShare') return b.fineShare-a.fineShare;
+    if(curRiskSort==='rph') return a.rph-b.rph;
+    if(curRiskSort==='sal') return b.sal-a.sal;
+    return a.sc.score-b.sc.score;
+  });
 
   // Stats
   const allWithRisk=empData.filter(e=>e.riskFines||e.riskLowRph||e.riskHourly);
