@@ -268,6 +268,24 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
 /* FINE SUMMARY TEXT */
 .fine-summary-text{background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.6;margin-bottom:14px}
 
+
+/* ADMIN LOGIN */
+.admin-login-overlay{display:none;position:fixed;inset:0;background:rgba(13,15,20,.96);backdrop-filter:blur(12px);z-index:500;align-items:center;justify-content:center}
+.admin-login-overlay.show{display:flex}
+.admin-login-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:36px;width:100%;max-width:360px;box-shadow:0 24px 80px rgba(0,0,0,.6);animation:mIn .2s ease}
+.admin-login-title{font-family:'Unbounded',sans-serif;font-size:16px;font-weight:700;margin-bottom:6px}
+.admin-login-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+.admin-login-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Golos Text',sans-serif;font-size:15px;padding:12px 16px;outline:none;transition:border-color .2s;margin-bottom:12px}
+.admin-login-input:focus{border-color:var(--accent)}
+.admin-login-err{font-size:12px;color:var(--red);margin-bottom:12px;min-height:18px}
+.admin-logout-btn{position:absolute;top:12px;right:12px;padding:5px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--muted);transition:all .15s}
+.admin-logout-btn:hover{color:var(--red);border-color:rgba(248,113,113,.4)}
+.rate-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.rate-row:last-child{border-bottom:none}
+.rate-label{flex:1;font-size:13.5px;font-weight:500}
+.rate-input{width:80px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Unbounded',sans-serif;font-size:14px;font-weight:700;padding:7px 10px;outline:none;text-align:center;transition:border-color .2s}
+.rate-input:focus{border-color:var(--accent)}
+
 /* RESPONSIVE */
 @media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr)}.stats-grid.cols3{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:768px){
@@ -637,51 +655,71 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
     </div>
 
     <!-- ADMIN -->
-    <div class="screen" id="screen-admin">
+    <div class="screen" id="screen-admin" style="position:relative">
+      <button class="admin-logout-btn" id="adminLogoutBtn" onclick="adminLogout()">Выйти из админки</button>
+
       <div class="admin-card">
         <h3>📦 Источник данных — GitHub</h3>
         <div class="alert alert-ok" id="gsAlert"></div>
         <div class="hint" style="margin-bottom:16px">
-          Данные загружаются автоматически из репозитория GitHub.<br>
-          Структура папок: <code>data/2026-02-01_2026-02-15/Выработка.csv</code><br>
-          Файлы: <code>Выработка.csv</code>, <code>Штрафы.csv</code>, <code>Операции.csv</code>
+          Данные загружаются из репозитория GitHub.<br>
+          Структура: <code>data/2026-02-01_2026-02-15/Выработка.csv</code>
         </div>
         <div id="ghStatus" style="margin-bottom:16px"></div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="reloadFromGitHub()">🔄 Перезагрузить данные</button>
-        </div>
+        <button class="btn btn-primary" onclick="reloadFromGitHub()">🔄 Перезагрузить данные</button>
       </div>
+
       <div class="admin-card">
-        <h3>📤 Добавить данные вручную (временно)</h3>
-        <div class="alert alert-ok" id="addAlert"></div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Название периода</label>
-            <input type="text" class="form-input" id="pName" placeholder="01.02 – 15.02.2026">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Тип данных</label>
-            <select class="form-select" id="pType">
-              <option value="vyrab">Выработка</option>
-              <option value="fines">Штрафы</option>
-              <option value="ops">Операции</option>
-            </select>
+        <h3>💰 Ставки ЗП на руки</h3>
+        <div class="hint" style="margin-bottom:18px">
+          Общая ставка применяется ко всем складам. Можно переопределить для каждого склада отдельно.<br>
+          Формула: <code>ЗП = Чистая выработка × ставка%</code>
+        </div>
+        <div style="background:var(--surface2);border-radius:12px;padding:16px;margin-bottom:20px">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Общая ставка (для всех складов)</div>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <input type="range" id="globalRateSlider" min="50" max="90" value="70" step="1"
+              oninput="onGlobalRateChange(this.value)" style="accent-color:var(--accent);width:180px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <input class="rate-input" type="number" id="globalRateInput" value="70" min="50" max="90"
+                oninput="onGlobalRateChange(this.value)" style="width:70px">
+              <span style="font-size:13px;color:var(--muted)">%</span>
+            </div>
+            <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px" onclick="applyRateToAll()">Применить ко всем ↓</button>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Данные (скопировать из Excel с заголовком → Ctrl+V)</label>
-          <textarea class="form-textarea" id="tsvData" rows="5" placeholder="Вставьте строки из Excel…"></textarea>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">По складам (переопределение)</div>
+        <div id="rateByWarehouse">
+          <div style="color:var(--muted);font-size:13px;padding:12px 0">Загрузите данные чтобы увидеть список складов</div>
         </div>
-        <button class="btn btn-primary" onclick="addManual()">Добавить</button>
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="saveRates()">💾 Сохранить ставки</button>
+          <button class="btn btn-ghost" onclick="resetRates()">Сбросить к умолчаниям</button>
+        </div>
+        <div class="alert alert-ok" id="ratesAlert" style="margin-top:12px"></div>
       </div>
+
       <div class="admin-card">
         <h3>📅 Загруженные периоды</h3>
+        <div class="alert alert-ok" id="addAlert"></div>
         <div class="periods-list" id="periodsList"><div class="empty"><div class="empty-icon">📂</div><p>Нет данных</p></div></div>
       </div>
     </div>
 
   </div>
 </main>
+
+<!-- ADMIN LOGIN OVERLAY -->
+<div class="admin-login-overlay" id="adminLoginOverlay">
+  <div class="admin-login-box">
+    <div class="admin-login-title">🔐 Панель администратора</div>
+    <div class="admin-login-sub">Введите пароль для доступа</div>
+    <input class="admin-login-input" type="password" id="adminPwdInput" placeholder="Пароль"
+      onkeydown="if(event.key==='Enter')checkAdminPwd()">
+    <div class="admin-login-err" id="adminPwdErr"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="checkAdminPwd()">Войти →</button>
+  </div>
+</div>
 
 <!-- GLOBAL SEARCH -->
 <div class="gsearch-overlay" id="gsearchOverlay" onclick="closeGSearch(event)">
@@ -767,7 +805,8 @@ td{padding:12px 14px;font-size:13px;white-space:nowrap}
 <script>
 // ═══════════════════════ DATA ═══════════════════════
 let periods={}, curPeriod='all', curSearch='', curCity='all', sortSt={}, curEmpFilter='all', curRiskGradeFilter='all', curRiskTypeFilter='all', curRiskSort='score';
-const RATE=0.70;
+const RATE=0.70; // default fallback
+function getSal(netEarn, wh){ return Math.max(0, pn(netEarn)) * getRate(wh); }
 
 const V_KEYS=['id','fio','hire','wh','lastPeak','firstWH','days','hours','avgShift','peaks','tarif','fineTarif','retPenalty','finePenalty','retWriteoff','writeoff','totalEarn','totalDed','earnAfterDed','netEarn','office','hourly'];
 const F_KEYS=['date','id','fio','city','reason','wh','amount','type','ret'];
@@ -820,18 +859,18 @@ function getO(){
 // ═══════════════════════ RENDER ═══════════════════════
 function renderOverview(){
   const v=getV(),f=getF(),o=getO();
-  const fot=v.reduce((s,r)=>s+Math.max(0,pn(r.netEarn))*RATE,0);
+  const fot=v.reduce((s,r)=>s+getSal(r.netEarn, r.wh),0);
   const nf=f.reduce((s,r)=>s+pn(r.amount)-pn(r.ret),0);
   const pk=o.reduce((s,r)=>s+pn(r.peaks),0);
   // Median ₽/hour and risk count
   const rphArr=v.map(r=>{
-    const sal=Math.max(0,pn(r.netEarn))*RATE;
+    const sal=getSal(r.netEarn, r.wh);
     const hrs=o.filter(x=>x.id==r.id).reduce((s,x)=>s+pn(x.hours),0)||pn(r.hours);
     return hrs>0?sal/hrs:0;
   }).filter(x=>x>0).sort((a,b)=>a-b);
   const medRph=rphArr.length?rphArr[Math.floor(rphArr.length/2)]:0;
   const riskCount=v.filter(r=>{
-    const sal=Math.max(0,pn(r.netEarn))*RATE;
+    const sal=getSal(r.netEarn, r.wh);
     const rf=f.filter(x=>x.id==r.id).reduce((s,x)=>s+pn(x.amount)-pn(x.ret),0);
     return sal>0 && rf/sal>=0.20;
   }).length;
@@ -839,7 +878,7 @@ function renderOverview(){
   const sorted=[...v].sort((a,b)=>pn(b.netEarn)-pn(a.netEarn)).slice(0,25);
   set('ov-cnt',sorted.length+' чел.');
   set('bOv',sorted.map((r,i)=>{
-    const sal=Math.max(0,pn(r.netEarn))*RATE;
+    const sal=getSal(r.netEarn, r.wh);
     const rf=f.filter(x=>x.id==r.id).reduce((s,x)=>s+pn(x.amount)-pn(x.ret),0);
     const oEmp=o.filter(x=>x.id==r.id);
     const hrs=oEmp.reduce((s,x)=>s+pn(x.hours),0)||pn(r.hours);
@@ -940,7 +979,7 @@ function renderEmployees(){
   else if(curEmpFilter==='risk'){
     const fTmp=getF(),oTmp=getO();
     ve=v.filter(r=>{
-      const sal=Math.max(0,pn(r.netEarn))*RATE;
+      const sal=getSal(r.netEarn, r.wh);
       const fine=fTmp.filter(f=>f.id==r.id).reduce((s,f)=>s+pn(f.amount)-pn(f.ret),0);
       return sal>0&&fine/sal>=0.20;
     });
@@ -948,7 +987,7 @@ function renderEmployees(){
   else if(curEmpFilter==='A'){
     const fTmp=getF(),oTmp=getO();
     ve=v.filter(r=>{
-      const sal=Math.max(0,pn(r.netEarn))*RATE;
+      const sal=getSal(r.netEarn, r.wh);
       const fm=fTmp.filter(f=>f.id==r.id).reduce((s,f)=>s+pn(f.amount)-pn(f.ret),0);
       const om=oTmp.filter(o=>o.id==r.id);
       const hrs=om.reduce((s,o)=>s+pn(o.hours),0)||pn(r.hours);
@@ -960,7 +999,7 @@ function renderEmployees(){
   }
   set('emp-cnt',ve.length+' чел.');
   set('bEmp',ve.map(r=>{
-    const sal=Math.max(0,pn(r.netEarn))*RATE;
+    const sal=getSal(r.netEarn, r.wh);
     const fm=fMap[r.id]||{tot:0,prod:0,home:0,ret:0};
     const om=oMap[r.id]||{hr:0,pk:0,er:0};
     const hrs=om.hr||pn(r.hours);
@@ -1041,7 +1080,7 @@ function renderFines(){
 
   // Get salary map for fine share calc
   const salMap={};
-  getV().forEach(r=>{salMap[r.id]=Math.max(0,pn(r.netEarn))*RATE;});
+  getV().forEach(r=>{salMap[r.id]=getSal(r.netEarn, r.wh);});
 
   // By employee — new columns: production / household / share
   const em={};
@@ -1721,7 +1760,7 @@ function onGSearch(){
   gsSearchIdx=0;
   res.innerHTML=matches.map((e,i)=>{
     const r=e.r;
-    const sal=Math.max(0,pn(r.netEarn))*RATE;
+    const sal=getSal(r.netEarn, r.wh);
     const fineNet=e.fines.reduce((s,f)=>s+pn(f.amount)-pn(f.ret),0);
     const hrs=e.ops.reduce((s,o)=>s+pn(o.hours),0)||pn(r.hours);
     const rph=hrs>0?sal/hrs:0;
@@ -1761,7 +1800,7 @@ function exportAllXlsx(){
   oAll.forEach(r=>{if(!oMap[r.id])oMap[r.id]={hr:0,pk:0};oMap[r.id].hr+=pn(r.hours);oMap[r.id].pk+=pn(r.peaks);});
   const rows=[['ФИО','ID','Склад','ЗП на руки','₽/час','Штрафы','Доля штрафов','Пиков','Часов','Дней','Тип','Рейтинг']];
   v.forEach(r=>{
-    const sal=Math.max(0,pn(r.netEarn))*RATE;
+    const sal=getSal(r.netEarn, r.wh);
     const fm=fMap[r.id]||{tot:0};
     const om=oMap[r.id]||{hr:0,pk:0};
     const hrs=om.hr||pn(r.hours);
@@ -1793,7 +1832,7 @@ function exportEmpXlsx(){
     fR=fR.concat((p.fines||[]).filter(r=>r.id==id));
     oR=oR.concat((p.ops||[]).filter(r=>r.id==id));
   });
-  const sal=Math.max(0,pn(vRow?.netEarn))*RATE;
+  const sal=getSal(vRow?.netEarn, vRow?.wh);
   const totalHrs=oR.reduce((s,r)=>s+pn(r.hours),0)||pn(vRow?.hours);
   const rph=totalHrs>0?sal/totalHrs:0;
   const rows=[['КАРТОЧКА СОТРУДНИКА'],[''],['ФИО',name],['ID',id],['Склад',vRow?.wh||'—'],['Дата найма',vRow?.hire||'—'],[''],
@@ -2060,7 +2099,7 @@ function renderChartRph(o,v){
   // Build ЗП/час per day — average of all employees who worked that day
   const vMap={};
   v.forEach(r=>{
-    const sal=Math.max(0,pn(r.netEarn))*RATE;
+    const sal=getSal(r.netEarn, r.wh);
     vMap[r.id]=sal;
   });
   const dayMap={};
@@ -2135,7 +2174,7 @@ function renderRisk(){
   fAll.forEach(r=>{if(!fMap[r.id])fMap[r.id]={tot:0,prod:0,home:0,cnt:0};const net=pn(r.amount)-pn(r.ret);fMap[r.id].tot+=net;fMap[r.id].cnt++;if(classifyFine(r.reason)==='work')fMap[r.id].prod+=net;else fMap[r.id].home+=net;});
   oAll.forEach(r=>{if(!oMap[r.id])oMap[r.id]={hr:0,pk:0,er:0};oMap[r.id].hr+=pn(r.hours);oMap[r.id].pk+=pn(r.peaks);oMap[r.id].er+=pn(r.earn);});
   const empData=v.map(r=>{
-    const sal=Math.max(0,pn(r.netEarn))*RATE;
+    const sal=getSal(r.netEarn, r.wh);
     const fm=fMap[r.id]||{tot:0,prod:0,home:0,cnt:0};
     const om=oMap[r.id]||{hr:0,pk:0,er:0};
     const hrs=om.hr||pn(r.hours);
@@ -2217,9 +2256,230 @@ function renderRisk(){
     </div>`).join(''));
 }
 
+
+// ═══════════════════════ ADMIN AUTH ═══════════════════════
+const ADMIN_HASH = 'dc7e59c6ff7551b0bb1ae14bfa425623642de23dca4b1997c2fdc9409e3f3a55';
+const ADMIN_SESSION_KEY = 'wb_admin_session';
+const ADMIN_SESSION_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+async function sha256(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function isAdminAuthed(){
+  try{
+    const s = localStorage.getItem(ADMIN_SESSION_KEY);
+    if(!s) return false;
+    const {expires} = JSON.parse(s);
+    return Date.now() < expires;
+  } catch(e){ return false; }
+}
+
+function setAdminSession(){
+  localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({expires: Date.now() + ADMIN_SESSION_TTL}));
+}
+
+function clearAdminSession(){
+  localStorage.removeItem(ADMIN_SESSION_KEY);
+}
+
+async function checkAdminPwd(){
+  const val = document.getElementById('adminPwdInput')?.value || '';
+  const err = document.getElementById('adminPwdErr');
+  if(!val){ if(err) err.textContent = 'Введите пароль'; return; }
+  const hash = await sha256(val);
+  if(hash === ADMIN_HASH){
+    setAdminSession();
+    document.getElementById('adminLoginOverlay')?.classList.remove('show');
+    document.getElementById('adminPwdInput').value = '';
+    if(err) err.textContent = '';
+    document.getElementById('adminLogoutBtn').style.display = 'block';
+    renderRateSettings();
+    renderPeriodsList();
+  } else {
+    if(err) err.textContent = '❌ Неверный пароль';
+    document.getElementById('adminPwdInput').value = '';
+    document.getElementById('adminPwdInput').focus();
+  }
+}
+
+function adminLogout(){
+  clearAdminSession();
+  document.getElementById('adminLogoutBtn').style.display = 'none';
+  go('overview');
+}
+
+// Intercept admin screen navigation
+const _origGo = go;
+go = function(id){
+  if(id === 'admin'){
+    if(!isAdminAuthed()){
+      // Show login overlay first, then navigate
+      _origGo('admin');
+      document.getElementById('adminLoginOverlay')?.classList.add('show');
+      setTimeout(()=>document.getElementById('adminPwdInput')?.focus(), 100);
+      return;
+    }
+    document.getElementById('adminLogoutBtn').style.display = 'block';
+    renderRateSettings();
+    renderPeriodsList();
+  }
+  _origGo(id);
+};
+
+// ═══════════════════════ RATE SETTINGS ═══════════════════════
+const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/69ec56d6856a6821896e423d';
+const JSONBIN_KEY = '$2a$10$Z6D9P/PIrScqDFqj.zWHzOj1weNOyndrzYTlN4wIsl3yyxvagfQIy';
+let rateSettings = { global: 70, overrides: {} };
+
+async function loadRateSettings(){
+  // First load from localStorage as fast fallback
+  try{
+    const local = localStorage.getItem('wb_rates');
+    if(local) rateSettings = JSON.parse(local);
+  } catch(e){}
+  // Then fetch fresh from JSONBin (shared across all users)
+  try{
+    const r = await fetch(JSONBIN_URL + '/latest', {
+      headers: {'X-Access-Key': JSONBIN_KEY}
+    });
+    if(r.ok){
+      const data = await r.json();
+      rateSettings = data.record;
+      localStorage.setItem('wb_rates', JSON.stringify(rateSettings));
+    }
+  } catch(e){ console.warn('JSONBin load failed, using local cache'); }
+}
+
+async function saveRates(){
+  // Read global rate
+  const globalVal = pn(document.getElementById('globalRateInput')?.value) || 70;
+  rateSettings.global = Math.max(50, Math.min(90, globalVal));
+  // Read per-warehouse overrides
+  document.querySelectorAll('.rate-wh-input').forEach(inp=>{
+    const wh = inp.dataset.wh;
+    const val = pn(inp.value);
+    if(val > 0 && val !== rateSettings.global){
+      rateSettings.overrides[wh] = Math.max(50, Math.min(90, val));
+    } else {
+      delete rateSettings.overrides[wh];
+    }
+  });
+  // Save to localStorage as cache
+  localStorage.setItem('wb_rates', JSON.stringify(rateSettings));
+  // Save to JSONBin (shared for all users)
+  const btn = document.querySelector('[onclick="saveRates()"]');
+  if(btn){ btn.textContent = '⏳ Сохраняем...'; btn.disabled = true; }
+  try{
+    const r = await fetch(JSONBIN_URL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Access-Key': JSONBIN_KEY
+      },
+      body: JSON.stringify(rateSettings)
+    });
+    if(r.ok){
+      showAlert('ratesAlert', '✅ Ставки сохранены и применены для всех пользователей', 'ok');
+    } else {
+      showAlert('ratesAlert', '⚠️ Сохранено локально, ошибка синхронизации: ' + r.status, 'ok');
+    }
+  } catch(e){
+    showAlert('ratesAlert', '⚠️ Сохранено локально (нет подключения к сети)', 'ok');
+  }
+  if(btn){ btn.textContent = '💾 Сохранить ставки'; btn.disabled = false; }
+  renderRateSettings();
+  refreshAll();
+}
+
+async function resetRates(){
+  rateSettings = { global: 70, overrides: {} };
+  localStorage.removeItem('wb_rates');
+  document.getElementById('globalRateInput').value = 70;
+  document.getElementById('globalRateSlider').value = 70;
+  try{
+    await fetch(JSONBIN_URL, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json','X-Access-Key': JSONBIN_KEY},
+      body: JSON.stringify(rateSettings)
+    });
+  } catch(e){}
+  renderRateSettings();
+  refreshAll();
+  showAlert('ratesAlert', '✅ Ставки сброшены к 70% для всех пользователей', 'ok');
+}
+
+function onGlobalRateChange(val){
+  const v = Math.max(50, Math.min(90, pn(val) || 70));
+  const slider = document.getElementById('globalRateSlider');
+  const input = document.getElementById('globalRateInput');
+  if(slider) slider.value = v;
+  if(input) input.value = v;
+}
+
+function applyRateToAll(){
+  const globalVal = pn(document.getElementById('globalRateInput')?.value) || 70;
+  rateSettings.overrides = {};
+  document.querySelectorAll('.rate-wh-input').forEach(inp=>{ inp.value = globalVal; });
+}
+
+function renderRateSettings(){
+  // Collect all warehouses from loaded data
+  const whSet = new Set();
+  Object.values(periods).forEach(p=>{
+    (p.vyrab||[]).forEach(r=>{ if(r.wh) whSet.add(r.wh); });
+  });
+  const warehouses = [...whSet].sort();
+  const el = document.getElementById('rateByWarehouse');
+  if(!el) return;
+  // Sync global slider/input
+  const gi = document.getElementById('globalRateInput');
+  const gs = document.getElementById('globalRateSlider');
+  if(gi) gi.value = rateSettings.global;
+  if(gs) gs.value = rateSettings.global;
+  if(!warehouses.length){
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0">Загрузите данные чтобы увидеть список складов</div>';
+    return;
+  }
+  el.innerHTML = warehouses.map(wh=>{
+    const override = rateSettings.overrides[wh];
+    const val = override !== undefined ? override : rateSettings.global;
+    const isOverride = override !== undefined && override !== rateSettings.global;
+    return `<div class="rate-row">
+      <div class="rate-label">
+        <div>${wh}</div>
+        ${isOverride ? `<div style="font-size:11px;color:var(--accent)">↳ переопределено (глобально: ${rateSettings.global}%)</div>` : '<div style="font-size:11px;color:var(--muted)">использует глобальную ставку</div>'}
+      </div>
+      <input class="rate-input rate-wh-input" type="number" data-wh="${wh}"
+        value="${val}" min="50" max="90"
+        style="border-color:${isOverride ? 'var(--accent)' : 'var(--border)'}"
+        oninput="this.style.borderColor=pn(this.value)!==rateSettings.global?'var(--accent)':'var(--border)'">
+      <span class="rate-badge">%</span>
+      <span style="font-size:11px;color:var(--muted)">≈ ${fmt(50000 * val / 100)} с 50к выраб.</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Get effective rate for a warehouse ──
+function getRate(wh){
+  if(rateSettings.overrides[wh] !== undefined)
+    return rateSettings.overrides[wh] / 100;
+  return rateSettings.global / 100;
+}
+
+// ═══════════════════════ ZERO FILTER ═══════════════════════
+// Override getV to filter out employees with all zeros
+const _origGetV = getV;
+getV = function(){
+  return _origGetV().filter(r =>
+    pn(r.days) > 0 || pn(r.hours) > 0 || pn(r.peaks) > 0 || pn(r.netEarn) !== 0
+  );
+};
+
 // ═══════════════════════ INIT ═══════════════════════
-window.addEventListener('DOMContentLoaded',()=>{
-  // Load data from GitHub
+window.addEventListener('DOMContentLoaded',async ()=>{
+  await loadRateSettings();
   loadAllPeriods();
 });
 </script>
