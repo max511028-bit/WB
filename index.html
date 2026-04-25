@@ -2331,6 +2331,7 @@ go = function(id){
 // ═══════════════════════ RATE SETTINGS ═══════════════════════
 const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/69ec56d6856a6821896e423d';
 const JSONBIN_KEY = '$2a$10$Z6D9P/PIrScqDFqj.zWHzOj1weNOyndrzYTlN4wIsl3yyxvagfQIy';
+const JSONBIN_MASTER = '$2a$10$c3DaB8yPy4hbi7THoFIyL.mj4LGf/7FL8ut6ueio4rATt8QgohhvK';
 let rateSettings = { global: 70, overrides: {} };
 
 async function loadRateSettings(){
@@ -2342,7 +2343,7 @@ async function loadRateSettings(){
   // Then fetch fresh from JSONBin (shared across all users)
   try{
     const r = await fetch(JSONBIN_URL + '/latest', {
-      headers: {'X-Access-Key': JSONBIN_KEY}
+      headers: {'X-Access-Key': JSONBIN_KEY, 'X-Bin-Meta': 'false'}
     });
     if(r.ok){
       const data = await r.json();
@@ -2401,7 +2402,7 @@ async function resetRates(){
   try{
     await fetch(JSONBIN_URL, {
       method: 'PUT',
-      headers: {'Content-Type':'application/json','X-Access-Key': JSONBIN_KEY},
+      headers: {'Content-Type':'application/json','X-Master-Key': JSONBIN_MASTER},
       body: JSON.stringify(rateSettings)
     });
   } catch(e){}
