@@ -809,8 +809,10 @@ const RATE=0.70; // default fallback
 function getSal(netEarn, wh){ return Math.max(0, pn(netEarn)) * getRate(wh); }
 
 const V_KEYS=['id','fio','hire','wh','lastPeak','firstWH','days','hours','avgShift','peaks','tarif','fineTarif','retPenalty','finePenalty','retWriteoff','writeoff','totalEarn','totalDed','earnAfterDed','netEarn','office','hourly'];
-const F_KEYS=['date','id','fio','city','reason','wh','amount','type','ret'];
-const O_KEYS=['date','id','fio','officeId','wh','opType','peaks','earn','hours'];
+const F_KEYS_OLD=['date','id','fio','city','reason','wh','amount','type','ret'];
+const O_KEYS_OLD=['date','id','fio','officeId','wh','opType','peaks','earn','hours'];
+const F_KEYS=['_comp','date','id','fio','wh','reason','_shk','amount','type'];
+const O_KEYS=['_comp','date','id','wh','fio','opType','peaks','earn','hours'];
 
 const OP_CFG={
   'Сортировка':{cls:'b-blue',color:'#38bdf8'},
@@ -1590,7 +1592,18 @@ async function fetchCSV(period, fileType){
       const r=await fetch(url);
       if(r.ok){
         const text=await r.text();
-        const keys=fileType==='vyrab'?V_KEYS:fileType==='fines'?F_KEYS:O_KEYS;
+        let keys;
+        if(fileType==='vyrab'){
+          keys=V_KEYS;
+        } else {
+          const clean=text.replace(/^﻿/,'');
+          const firstLine=clean.split(/\r?\n/)[0];
+          const sep=firstLine.includes(';')?';':',';
+          const firstCell=firstLine.split(sep)[0].replace(/"/g,'').trim();
+          const isNew=firstCell==='Компания';
+          if(fileType==='fines') keys=isNew?F_KEYS:F_KEYS_OLD;
+          else keys=isNew?O_KEYS:O_KEYS_OLD;
+        }
         return parseCSV(text,keys,period);
       }
     }catch(e){}
